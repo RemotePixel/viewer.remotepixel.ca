@@ -1,0 +1,411 @@
+"use strict";
+
+mapboxgl.accessToken = '{YOUR-MAPBOX-TOKEN}';
+const landsat_tiler_url = '{YOUR-LANDSAT-TILER-URL}';
+const sat_api = 'https://api.developmentseed.org/satellites/?search=';
+
+let scope = {};
+
+////////////////////////////////////////////////////////////////////////////////
+//From Libra by developmentseed (https://github.com/developmentseed/libra)
+const zeroPad = (n, c) => {
+    let s = String(n);
+    if (s.length < c) s = zeroPad('0' + n, c);
+    return s;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const parseParams = (w_loc) => {
+    const param_list = w_loc.replace('?', '').split('&')
+    const out_params = {}
+    for (let i = 0; i < param_list.length; i++) {
+        let tPar = param_list[i].split('=');
+        out_params[tPar[0]] = tPar[1]
+    }
+    return out_params;
+};
+
+
+const sortScenes = (a, b) => {
+    return Date.parse(b.date) - Date.parse(a.date);
+};
+
+
+const parseSceneid_c1 = (sceneid) => {
+
+    const sceneid_info = sceneid.split('_');
+
+    return {
+        satellite: sceneid_info[0].slice(0,1) + sceneid_info[0].slice(3),
+        sensor:  sceneid_info[0].slice(1,2),
+        correction_level: sceneid_info[1],
+        path: sceneid_info[2].slice(0,3),
+        row: sceneid_info[2].slice(3),
+        acquisition_date: sceneid_info[3],
+        ingestion_date: sceneid_info[4],
+        collection: sceneid_info[5],
+        category: sceneid_info[6]
+    };
+};
+
+
+const parseSceneid_pre = (sceneid) => {
+
+    sceneid = sceneid.replace('LGN01', 'LGN00');
+
+    return {
+        sensor:  sceneid.slice(1,2),
+        satellite: sceneid.slice(2,3),
+        path: sceneid.slice(3,6),
+        row: sceneid.slice(6,9),
+        acquisitionYear: sceneid.slice(9,13),
+        acquisitionJulianDay: sceneid.slice(13,16),
+        groundStationIdentifier: sceneid.slice(16,19),
+        archiveVersion: sceneid.slice(19,21)
+    };
+};
+
+
+const buildQueryAndRequestL8 = (features) => {
+    $('.list-img').scrollLeft(0);
+    $('.list-img').empty();
+
+    $(".scenes-info").addClass('none');
+    $('.errorMessage').addClass('none');
+    $(".metaloader").removeClass('off');
+
+    if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
+    if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+
+    const prStr = [].concat.apply([], features.map(function(e){
+        return "(path:" + e.properties.PATH.toString() + "+AND+row:" + e.properties.ROW.toString() + ")";
+    })).join('+OR+');
+
+    const query = `${sat_api}satellite_name:landsat-8+AND+(${prStr})&limit=2000`;
+    const results = [];
+
+    $.getJSON(query, (data) => {
+        if (data.meta.found !== 0) {
+
+            for (let i = 0; i < data.results.length; i += 1) {
+                let scene = {};
+                scene.path = data.results[i].path.toString();
+                scene.row = data.results[i].row.toString();
+                scene.grid = data.results[i].path + '/' + data.results[i].row;
+                scene.date = data.results[i].date;
+                scene.cloud = data.results[i].cloud_coverage;
+                scene.browseURL = data.results[i].browseURL.replace('http://', 'https://');
+                scene.thumbURL = scene.browseURL.replace('browse/', 'browse/thumbnails/')
+                scene.sceneID = data.results[i].scene_id;
+                scene.productID = data.results[i].LANDSAT_PRODUCT_ID;
+                scene.awsID = (Date.parse(scene.date) < Date.parse('2017-05-01')) ? data.results[i].scene_id.replace(/LGN0[0-9]/, 'LGN00'): data.results[i].LANDSAT_PRODUCT_ID;
+                results.push(scene);
+            }
+
+            results.sort(sortScenes);
+
+            for (let i = 0; i < results.length; i += 1) {
+
+                $('.list-img').append(
+                    `<li data-row="${results[i].row}" data-path="${results[i].path}" data-date="${results[i].date}" data-cloud="${results[i].cloud}" class="list-element" onclick="initSceneL8('${results[i].awsID}','${results[i].date}')" onmouseover="overImage(this)" onmouseout="outImage()">` +
+                        `<img class="img-item" src="${results[i].thumbURL}">` +
+                    '</li>'
+                );
+            }
+
+        } else {
+            $('.list-img').append('<span class="nodata-error">No image found</span>');
+        }
+    })
+    .fail(() => {
+        $('.list-img').append('<span class="serv-error">Sat-API Error</span>');
+    })
+    .always(() => {
+        $('.map').addClass('in');
+        $(".metaloader").addClass('off');
+        $('.list-img').removeClass('none');
+        $('#btn-clear').removeClass('none');
+        map.resize();
+    });
+}
+
+
+const overImage = (element) => {
+    let hoverstr = [
+        'all',
+        ['==', 'PATH', parseInt($(element)[0].getAttribute('data-path'))],
+        ['==', 'ROW', parseInt($(element)[0].getAttribute('data-row'))]
+    ];
+    map.setFilter("L8_Highlighted", hoverstr);
+
+    const sceneDate = $(element)[0].getAttribute('data-date');
+    const sceneCloud = $(element)[0].getAttribute('data-cloud');
+    $('.img-over-info').empty();
+    $('.img-over-info').removeClass('none');
+    $('.img-over-info').append(`<span>${sceneDate} | ${sceneCloud}% </span>`);
+};
+
+const outImage = () => {
+    map.setFilter("L8_Highlighted", ['all', ['==', 'PATH', ''], ['==', 'ROW', '']]);
+    $('.img-over-info').addClass('none');
+};
+
+const initSceneL8 = (sceneID, sceneDate) => {
+  $(".metaloader").removeClass('off');
+  $('.errorMessage').addClass('none');
+  $('#dl').addClass('none');
+
+  let min = $("#minCount").val();
+  let max = $("#maxCount").val();
+  const query = `${landsat_tiler_url}/metadata/${sceneID}?'pmim=${min}&pmax=${max}`;
+
+  $.getJSON(query, (data) => {
+      scope.imgMetadata = data;
+      updateRasterTile();
+
+      let scene_info;
+      if (/L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|RT)/.exec(sceneID)) {
+          scene_info = parseSceneid_c1(sceneID);
+      } else {
+          scene_info = parseSceneid_pre(sceneID);
+      }
+
+      const AWSurl = `https://landsatonaws.com/L8/${scene_info.path}/${scene_info.row}/${sceneID}`;
+
+      $(".scenes-info").removeClass('none');
+      $(".scenes-info .id").text(sceneID);
+      $(".scenes-info .date").text(sceneDate);
+      $(".scenes-info .url").html('<a href=' + AWSurl + ' target="_blanck">link</a>');
+
+      $('#dl').removeClass('none');
+      $('.errorMessage').addClass('none');
+  })
+      .fail(() => {
+          if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
+          if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+          $('.errorMessage').removeClass('none');
+          $(".scenes-info span").text('');
+          $(".scenes-info").addClass('none');
+      })
+      .always(() => {
+          $('.metaloader').addClass('off');
+      });
+};
+
+
+const updateRasterTile = () => {
+    if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+    if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
+
+    let meta = scope.imgMetadata;
+
+    const rgb = $(".img-display-options .toggle-group.landsat input:checked").attr("data");
+    const bands = rgb.split(',');
+
+    // NOTE: Calling 512x512px tiles is a bit longer but gives a
+    // better quality image and reduce the number of tiles requested
+
+    // HACK: Trade-off between quality and speed. Setting source.tileSize to 512 and telling landsat-tiler
+    // to get 256x256px reduces the number of lambda calls (but they are faster)
+    // and reduce the quality because MapboxGl will oversample the tile.
+
+    let tileURL = `${landsat_tiler_url}/tiles/${meta.sceneid}/{z}/{x}/{y}.png?` +
+        `rgb=${bands}` +
+        '&tile=256' +
+        `&r_bds=${meta.rgbMinMax[bands[0]]}` +
+        `&g_bds=${meta.rgbMinMax[bands[1]]}` +
+        `&b_bds=${meta.rgbMinMax[bands[2]]}`;
+    if (rgb == '4,3,2') tileURL += '&pan=True';
+
+    const attrib = '<a href="https://landsat.usgs.gov/landsat-8"> &copy; USGS/NASA Landsat</a>';
+
+    $(".scenes-info .rgb").text(rgb.toString());
+
+    map.addSource('raster-tiles', {
+        type: "raster",
+        tiles: [tileURL],
+        attribution : [attrib],
+        bounds: scope.imgMetadata.bounds,
+        minzoom: 7,
+        maxzoom: 14,
+        tileSize: 256
+    });
+
+    map.addLayer({
+        'id': 'raster-tiles',
+        'type': 'raster',
+        'source': 'raster-tiles'
+    });
+
+    const extent = scope.imgMetadata.bounds;
+    const llb = mapboxgl.LngLatBounds.convert([[extent[0],extent[1]], [extent[2],extent[3]]]);
+    if (map.getZoom() <= 3) map.fitBounds(llb, {padding: 50});
+};
+
+
+const updateMetadata = () => {
+    if (!map.getSource('raster-tiles')) return;
+    initSceneL8(scope.imgMetadata.sceneid, scope.imgMetadata.date);
+};
+
+
+const reset = () => {
+  if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+  if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
+
+  map.setFilter("L8_Highlighted", ["in", "PATH", ""]);
+  map.setFilter("L8_Selected", ["in", "PATH", ""]);
+
+  $('.list-img').scrollLeft(0);
+  $('.list-img').empty();
+
+  $(".metaloader").addClass('off');
+  $(".scenes-info span").text('');
+  $(".scenes-info").addClass('none');
+  $('#btn-clear').addClass('none');
+  $('#dl').addClass('none');
+
+  scope = {};
+
+  $("#minCount").val(5);
+  $("#maxCount").val(95);
+
+  $(".img-display-options .toggle-group input").prop('checked', false);
+  $(".img-display-options .toggle-group.landsat input#default").prop('checked', true);
+
+  $('.map').removeClass('in');
+  $('.list-img').addClass('none');
+  map.resize();
+
+  $('.errorMessage').addClass('none');
+};
+
+
+const getFeatures = (e) => {
+    let features = map.queryRenderedFeatures(e.point, {layers: ['L8_Grid']});
+    let pr = ["in", "PATH", ""];
+    if (features.length !== 0) {
+        pr =  [].concat.apply([], ['any', features.map(e => {
+            return ["all", ["==", "PATH", e.properties.PATH], ["==", "ROW", e.properties.ROW]];
+        })]);
+    }
+    map.setFilter("L8_Highlighted", pr);
+    return features;
+};
+
+
+$(".img-display-options .toggle-group").change(() => {
+    if (map.getSource('raster-tiles')) updateRasterTile();
+});
+
+document.getElementById("btn-clear").onclick = () => {reset();};
+
+const button = document.getElementById('dl');
+button.addEventListener('click', (e) => {
+    map.getCanvas().toBlob(function(blob) {
+        saveAs(blob, 'map.png');
+    });
+});
+
+const showSiteInfo = () => {
+    $('.site-info').toggleClass('in');
+    map.resize();
+};
+
+
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/satellite-streets-v9',
+    center: [-70.50, 40],
+    zoom: 3,
+    attributionControl: true,
+    preserveDrawingBuffer: true,
+    minZoom: 3,
+    maxZoom: 14
+});
+
+map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+map.on('mousemove', (e) => {getFeatures(e);});
+
+map.on('click', (e) => {
+    $('.errorMessage').addClass('none');
+    const features = getFeatures(e);
+    if (features.length !== 0) {
+        buildQueryAndRequestL8(features);
+        const geojson = { "type": "FeatureCollection", "features": features};
+        const extent = turf.bbox(geojson);
+        const llb = mapboxgl.LngLatBounds.convert([[extent[0],extent[1]], [extent[2],extent[3]]]);
+        if (map.getZoom() <= 8) map.fitBounds(llb, {padding: 50});
+    }
+});
+
+map.on('load', () => {
+    const params = parseParams(window.location.search)
+
+    if (params.sceneid) {
+        let sceneid = params.sceneid;
+        let scene_info;
+        if (/L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|RT)/.exec(sceneid)) {
+            scene_info = parseSceneid_c1(sceneid);
+        } else {
+            scene_info = parseSceneid_pre(sceneid);
+            sceneid = sceneid.replace(/LGN0[0-9]/, 'LGN00');
+        }
+
+        initSceneL8(sceneid, '');
+    }
+
+    map.addSource('landsat', {
+        "type": "vector",
+        "url": "mapbox://vincentsarago.8ib6ynrs"
+    });
+
+    map.addLayer({
+        'id': 'L8_Grid',
+        'type': 'fill',
+        'source': 'landsat',
+        'source-layer': 'Landsat8_Desc_filtr2',
+        'paint': {
+            'fill-color': 'hsla(0, 0%, 0%, 0)',
+            'fill-outline-color': {
+                'base': 1,
+                'stops': [
+                    [0, 'hsla(207, 84%, 57%, 0.24)'],
+                    [22, 'hsl(207, 84%, 57%)']
+                ]
+            },
+            'fill-opacity': 1
+        }
+    });
+
+    map.addLayer({
+        "id": "L8_Highlighted",
+        "type": "fill",
+        "source": "landsat",
+        "source-layer": "Landsat8_Desc_filtr2",
+        "paint": {
+            "fill-outline-color": "#1386af",
+            "fill-color": "#0f6d8e",
+            "fill-opacity": 0.3
+        },
+        "filter": ["in", "PATH", ""]
+    });
+
+    map.addLayer({
+        "id": "L8_Selected",
+        "type": "line",
+        "source": "landsat",
+        "source-layer": "Landsat8_Desc_filtr2",
+        "paint": {
+            "line-color": "#000",
+            "line-width": 1
+        },
+        "filter": ["in", "PATH", ""]
+    });
+    $(".loading-map").addClass('off');
+});
+
+console.log("You think you can find something here ?");
+console.log("The project is fully open-source. Go check github.com/remotepixel/viewer.remotepixel.ca ");
