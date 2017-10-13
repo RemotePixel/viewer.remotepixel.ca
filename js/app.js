@@ -345,6 +345,10 @@ map.on('load', () => {
     const params = parseParams(window.location.search)
 
     if (params.sceneid) {
+
+        showSiteInfo();
+        $('#btn-clear').removeClass('none');
+        
         let sceneid = params.sceneid;
         let scene_info;
         if (/L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|RT)/.exec(sceneid)) {
