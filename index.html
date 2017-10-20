@@ -9,18 +9,18 @@
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:site" content="@RemotePixel" />
 	<meta name="twitter:title" content="RemotePixel Landsat Viewer" />
-	<meta name="twitter:description" content="A simple and fast Landsat-8 viewer powered by AWS Lambda" />
+	<meta name="twitter:description" content="A simple and fast Landsat and Sentinel viewer powered by AWS Lambda" />
 
 	<meta name="twitter:creator" content="@_VincentS_" />
 	<meta name="twitter:image:src" content="https://viewer.remotepixel.ca/img/viewer.jpg" />
 
-	<meta property="og:title" content="RemotePixel Landsat Viewer" />
+	<meta property="og:title" content="RemotePixel Landsat / Sentinel Viewer" />
 	<meta property="og:url" content="https://viewer.remotepixel.ca" />
 	<meta property="og:image" content="https://viewer.remotepixel.ca/img/viewer.jpg" />
-	<meta property="og:description" content="A simple and fast Landsat-8 viewer powered by AWS Lambda" />
+	<meta property="og:description" content="A simple and fast Landsat and Sentinel viewer powered by AWS Lambda" />
 	<meta property="og:site_name" content="Remote Pixel" />
 
-	<title>RemotePixel | Landsat Viewer</title>
+	<title>RemotePixel | Landsat / Sentinel Viewer</title>
 
 	<script src='https://api.mapbox.com/mapbox-gl-js/v0.40.1/mapbox-gl.js'></script>
 	<link href='https://api.mapbox.com/mapbox-gl-js/v0.40.1/mapbox-gl.css' rel='stylesheet' />
@@ -49,8 +49,8 @@
 							<svg class='icon icon--l'><use xlink:href='#icon-close'/></svg>
 					</button>
 
-					<h2>Landsat Viewer</h2>
-					<p>A simple and fast Landsat-8 viewer powered by AWS Lambda</p>
+					<h2>Landsat/Sentinel Viewer</h2>
+					<p>A simple and fast Landsat and Sentinel viewer powered by AWS Lambda</p>
 
 					<img class="img-responsive center" src="img/viewer.jpg">
 
@@ -62,23 +62,23 @@
 					</ul>
 
 					<h4>Tiles</h4>
-					<p>Tile served via <strong>landsat-tiler</strong> are TOA (Top Of Atmosphere) corrected and rescaled to 0->255 rgb values.</p>
-					<p>True Color RGB (4,3,2) are panshaperpenned and serverd at 15m resolution</p>
+					<p>Tile served via <strong>lambda tilers</strong> are TOA (Top Of Atmosphere) corrected and rescaled to 0->255 rgb values.</p>
+					<p>Landsat True Color RGB (4,3,2) is panshaperpenned and serverd at 15m resolution. Sentinel-2 is served at 10m resolution.</p>
 
 					<h4>Info</h4>
-					<p>Landsat search results is powered by
+					<p>Landsat/Sentinel search results is powered by
 						<a href="https://github.com/sat-utils/sat-api" target="_blank">Developmentseed new Satellite API</a>.
 				  </p>
 
-					<p>Landsat images previews are from
-						<a href="https://earthexplorer.usgs.gov" target="_blank">USGS Earth Explorer</a>
-					</p>
+					<p>Landsat and Sentinel images previews are from <a href="https://earthexplorer.usgs.gov" target="_blank">USGS Earth Explorer</a>
+						and <a href="http://sentinel-pds.s3-website.eu-central-1.amazonaws.com" target="_blank"> Sentinel on AWS S3</a>
+						(via <a href="http://www.sinergise.com" target="_blank">Sinergise</a>).</p>
 
 					<p>This project is powered by Mapbox-GL API and the awesome vector tile technology develloped by <a href="https://mapbox.com" target="_blank">Mapbox</a>.</p>
 
 					<p>Continue reading: <a href="https://blog.mapbox.com/combining-the-power-of-aws-lambda-and-rasterio-8ffd3648c348">Blog post</a> on Mapbox.com</p>
 
-					<h4>Landsat on AWS</h4>
+					<h4>Public dataset on AWS</h4>
 					<p>Landsat data available on AWS are in Level <strong>1T</strong>:</p>
 					<blockquote>
 							Standard Terrain Correction (Level 1T) -
@@ -91,6 +91,22 @@
 
 							<p>Info: <a href="http://landsat.usgs.gov/Landsat_Processing_Details.php" target="_blank">http://landsat.usgs.gov/</a></p>
 					</blockquote>
+
+					<p>Sentinel data available on AWS are in Level <strong>1C</strong>:</p>
+					<blockquote>
+						Level-1C processing includes radiometric and geometric corrections including ortho-rectification and spatial registration on a global reference system with sub-pixel accuracy.
+						Level-1C processing is broken down into the following steps:
+						- Tiles association: selection of pre-defined tiles intersecting the footprint of the required image.
+						- Resampling grid computation: enabling linking of the native geometry image to the target geometry image (ortho-rectified).
+						- Resampling of each spectral band in the geometry of the ortho-image using the resampling grids and an interpolation filter. Calculation of the TOA reflectances also occurs in this step.
+						- Masks computation: cloud and land/water masks are generated.
+						- Imagery compression of the resultant Level-1C imagery via the JPEG2000 algorithm and a GML geographic imagery-encoded header.
+						<p>Info: <a href="https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/processing-levels/level-1" target="_blank">https://sentinel.esa.int</a></p>
+
+						Reflectance, often between 0 and 1, is converted into integer values, in order to preserve the dynamic range of the data by applying a fixed coefficient (1000 by default).
+						<p>Info: <a href="https://sentinel.esa.int/web/sentinel/technical-guides/sentinel-2-msi/level-1c/algorithm" target="_blank">https://sentinel.esa.int</a></p>
+					</blockquote>
+
 
 					<h4>Create your Own</h4>
 					<p>AWS Lambda powered <strong>landsat-tiler</strong> source code is on GitHub
@@ -120,52 +136,91 @@
 
 								<div class='toggle-group landsat'>
 									<label class='toggle-container'>
-										<input data="6,5,4" name='toggle' type='radio' />
+										<input data="6,5,4" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>vegetation analysis</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="7,6,4" name='toggle' type='radio' />
+										<input data="7,6,4" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>urban</div>
 									</label>
 									<label class='toggle-container'>
-										<input id='default' data="4,3,2" checked="checked" name='toggle' type='radio'/>
+										<input id='default' data="4,3,2" checked="checked" name='toggle-landsat' type='radio'/>
 										<div class='btn btn--stroke btn--darken50 toggle'>natural color</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="5,4,3" name='toggle' type='radio' />
+										<input data="5,4,3" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>false color</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="5,6,4" name='toggle' type='radio' />
+										<input data="5,6,4" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>land/water</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="7,6,5" name='toggle' type='radio' />
+										<input data="7,6,5" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>atmospheric penetration</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="6,5,2" name='toggle' type='radio' />
+										<input data="6,5,2" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>agriculture</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="5,6,2" name='toggle' type='radio' />
+										<input data="5,6,2" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>healthy veg</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="7,5,2" name='toggle' type='radio' />
+										<input data="7,5,2" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>forest burn</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="7,5,4" name='toggle' type='radio' />
+										<input data="7,5,4" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>shortwave ir</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="5,7,1" name='toggle' type='radio' />
+										<input data="5,7,1" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>false2</div>
 									</label>
 									<label class='toggle-container'>
-										<input data="7,5,3" name='toggle' type='radio' />
+										<input data="7,5,3" name='toggle-landsat' type='radio' />
 										<div class='btn btn--stroke btn--darken50 toggle'>natural w/ atmo</div>
+									</label>
+								</div>
+
+								<div class='toggle-group sentinel none'>
+									<label class='toggle-container'>
+										<input data='11,8A,04' name='toggle-sentinel' type='radio' />
+										<div class='btn btn--stroke btn--darken50 toggle'>vegetation analysis</div>
+									</label>
+									<label class='toggle-container'>
+										<input data='12,11,04' name='toggle-sentinel' type='radio' />
+										<div class='btn btn--stroke btn--darken50 toggle'>urban</div>
+									</label>
+									<label class='toggle-container'>
+										<input id='default' data='04,03,02' checked="checked" name='toggle-sentinel' type='radio'/>
+										<div class='btn btn--stroke btn--darken50 toggle'>natural color</div>
+									</label>
+									<label class='toggle-container'>
+										<input data='08,04,03' name='toggle-sentinel' type='radio' />
+										<div class='btn btn--stroke btn--darken50 toggle'>false color</div>
+									</label>
+									<label class='toggle-container'>
+										<input data='8A,11,04' name='toggle-sentinel' type='radio' />
+										<div class='btn btn--stroke btn--darken50 toggle'>land/water</div>
+									</label>
+									<label class='toggle-container'>
+										<input data='12,11,8A' name='toggle-sentinel' type='radio' />
+										<div class='btn btn--stroke btn--darken50 toggle'>atmospheric penetration</div>
+									</label>
+									<label class='toggle-container'>
+										<input data='11,8A,02' name='toggle-sentinel' type='radio' />
+										<div class='btn btn--stroke btn--darken50 toggle'>agriculture</div>
+									</label>
+									<label class='toggle-container'>
+										<input data='8A,11,02' name='toggle-sentinel' type='radio' />
+										<div class='btn btn--stroke btn--darken50 toggle'>healthy veg</div>
+									</label>
+									<label class='toggle-container'>
+										<input data='12,8A,04' name='toggle-sentinel' type='radio' />
+										<div class='btn btn--stroke btn--darken50 toggle'>shortwave_ir</div>
 									</label>
 								</div>
 
@@ -184,6 +239,20 @@
 					</div>
 
 					<div id="map" class="map">
+
+							<div class="map-top-right">
+								<div id='satellite-toggle' class='toggle-group txt-m mr18'>
+								  <label class='toggle-container'>
+								    <input sat="landsat" checked name='toggle-sat' type='radio' />
+								    <div class='toggle'>Landsat</div>
+								  </label>
+								  <label class='toggle-container'>
+								    <input sat="sentinel" name='toggle-sat' type='radio' />
+								    <div class='toggle'>Sentinel</div>
+								  </label>
+								</div>
+							</div>
+
 							<div class="map-bottom-right">
 									<button id='btn-clear' class='shadow-darken10-bold-on-hover round none'>
 										<svg class='icon icon--l'><use xlink:href='#icon-close'/></svg>
@@ -206,26 +275,26 @@
 			        </div>
 
 		        <div class="loading-map">
-			          <div class="middle-center">
-			            <span>Loading</span>
-			            <div class="round animation-spin animation--infinite animation--speed-1">
-			              <svg class='icon icon--l inline-block'><use xlink:href='#icon-satellite'/></svg>
-			            </div>
-			          </div>
-			        </div>
+		          <div class="middle-center">
+		            <span>Loading</span>
+		            <div class="round animation-spin animation--infinite animation--speed-1">
+		              <svg class='icon icon--l inline-block'><use xlink:href='#icon-satellite'/></svg>
+		            </div>
+		          </div>
+		        </div>
 
-							<span class="metaloader off">
-								<div class="round animation-spin animation--infinite animation--speed-1">
-									<svg class='icon icon--l color-blue inline-block'><use xlink:href='#icon-satellite'/></svg>
-								</div>
-							</span>
+						<span class="metaloader off">
+							<div class="round animation-spin animation--infinite animation--speed-1">
+								<svg class='icon icon--l color-blue inline-block'><use xlink:href='#icon-satellite'/></svg>
+							</div>
+						</span>
 
-							<span class="errorMessage none">
-									<svg class='icon icon--l'><use xlink:href='#icon-alert'/></svg>
-									<span >Error</span>
-							</span>
+						<span class="errorMessage none">
+								<svg class='icon icon--l'><use xlink:href='#icon-alert'/></svg>
+								<span >Error</span>
+						</span>
 
-							<div class='img-over-info'></div>
+						<div class='img-over-info'></div>
 		      </div>
 
 					<ul class="list-img none"></ul>

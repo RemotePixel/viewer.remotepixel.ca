@@ -1,7 +1,10 @@
 "use strict";
 
-mapboxgl.accessToken = '{YOUR-MAPBOX-TOKEN}';
-const landsat_tiler_url = '{YOUR-LANDSAT-TILER-URL}';
+
+mapboxgl.accessToken = '';
+const landsat_tiler_url = '';
+const sentinel_tiler_url = '';
+
 const sat_api = 'https://api.developmentseed.org/satellites/?search=';
 
 let scope = {};
@@ -26,11 +29,9 @@ const parseParams = (w_loc) => {
     return out_params;
 };
 
-
 const sortScenes = (a, b) => {
     return Date.parse(b.date) - Date.parse(a.date);
 };
-
 
 const parseSceneid_c1 = (sceneid) => {
 
@@ -49,7 +50,6 @@ const parseSceneid_c1 = (sceneid) => {
     };
 };
 
-
 const parseSceneid_pre = (sceneid) => {
 
     sceneid = sceneid.replace('LGN01', 'LGN00');
@@ -66,6 +66,30 @@ const parseSceneid_pre = (sceneid) => {
     };
 };
 
+const parse_s2_tile = (tile) => {
+    return {
+        uz : tile.slice(0, 2),
+        lb : tile.slice(2, 3),
+        sq : tile.slice(3, 5)
+    };
+};
+
+const s2_name_to_key = (scene) => {
+    const info = scene.split('_');
+    const acquisitionDate = info[2];
+    const tile_info = parse_s2_tile(info[3]);
+    const num = info[4];
+
+    return [
+        tile_info.uz,
+        tile_info.lb,
+        tile_info.sq,
+        acquisitionDate.slice(0,4),
+        acquisitionDate.slice(4,6).replace(/^0+/, ''),
+        acquisitionDate.slice(6,8).replace(/^0+/, ''),
+        num
+    ].join('/');
+};
 
 const buildQueryAndRequestL8 = (features) => {
     $('.list-img').scrollLeft(0);
@@ -128,8 +152,75 @@ const buildQueryAndRequestL8 = (features) => {
         $('#btn-clear').removeClass('none');
         map.resize();
     });
-}
+};
 
+const buildQueryAndRequestS2 = (features) => {
+    $('.list-img').scrollLeft(0);
+    $('.list-img').empty();
+
+    $(".scenes-info").addClass('none');
+    $('.errorMessage').addClass('none');
+    $(".metaloader").removeClass('off');
+
+    if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
+    if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+
+    const prStr = [].concat.apply([], features.map(function(e){
+        return "(grid_square:" +
+            e.properties.Name.slice(3, 5) +
+            "+AND+latitude_band:" +
+            e.properties.Name.slice(2, 3) +
+            "+AND+utm_zone:" +
+            e.properties.Name.slice(0, 2) +
+            ")";
+    })).join('+OR+');
+
+    const query = sat_api + 'satellite_name:sentinel-2+AND+(' + prStr + ")&limit=2000";
+    const results = [];
+
+    $.getJSON(query, (data) => {
+        if (data.meta.found !== 0) {
+
+            for (let i = 0; i < data.results.length; i += 1) {
+                let scene = {};
+                scene.date = data.results[i].date;
+                scene.cloud = data.results[i].cloud_coverage;
+                scene.utm_zone = data.results[i].utm_zone.toString();
+                scene.grid_square = data.results[i].grid_square;
+                scene.coverage = data.results[i].data_coverage_percentage;
+                scene.latitude_band = data.results[i].latitude_band;
+                scene.sceneID = data.results[i].scene_id;
+                scene.browseURL = data.results[i].thumbnail.replace('.jp2', ".jpg");
+                scene.path = data.results[i].aws_path.replace('tiles', "#tiles");
+                scene.grid = scene.utm_zone + scene.latitude_band + scene.grid_square;
+                results.push(scene);
+            }
+
+            results.sort(sortScenes);
+
+            for (let i = 0; i < results.length; i += 1) {
+                $('.list-img').append(
+                    `<li data-grid="${results[i].grid}" data-date="${results[i].date}" data-cloud="${results[i].cloud}" class="list-element" onclick="initSceneS2('${results[i].sceneID}','${results[i].date}')" onmouseover="overImageS2(this)" onmouseout="outImageS2()">` +
+                        `<img class="img-item" src="${results[i].browseURL}">` +
+                    '</li>'
+                );
+            }
+
+        } else {
+            $('.list-img').append('<span class="nodata-error">No image found</span>');
+        }
+    })
+    .fail(() => {
+        $('.list-img').append('<span class="serv-error">Sat-API Error</span>');
+    })
+    .always(() => {
+        $('.map').addClass('in');
+        $(".metaloader").addClass('off');
+        $('.list-img').removeClass('none');
+        $('#btn-clear').removeClass('none');
+        map.resize();
+    });
+};
 
 const overImage = (element) => {
     let hoverstr = [
@@ -148,6 +239,22 @@ const overImage = (element) => {
 
 const outImage = () => {
     map.setFilter("L8_Highlighted", ['all', ['==', 'PATH', ''], ['==', 'ROW', '']]);
+    $('.img-over-info').addClass('none');
+};
+
+const overImageS2 = (element) => {
+    const grid = $(element)[0].getAttribute('data-grid');
+    map.setFilter("S2_Highlighted", ['in', 'Name', grid]);
+
+    const sceneDate = $(element)[0].getAttribute('data-date');
+    const sceneCloud = $(element)[0].getAttribute('data-cloud');
+    $('.img-over-info').empty();
+    $('.img-over-info').removeClass('none');
+    $('.img-over-info').append(`<span>${sceneDate} | ${sceneCloud}% </span>`);
+};
+
+const outImageS2 = () => {
+    map.setFilter("S2_Highlighted", ['in', 'Name', '']);
     $('.img-over-info').addClass('none');
 };
 
@@ -193,15 +300,79 @@ const initSceneL8 = (sceneID, sceneDate) => {
       });
 };
 
+const initSceneS2 = (sceneID, sceneDate) => {
+  $(".metaloader").removeClass('off');
+  $('.errorMessage').addClass('none');
+
+  let min = $("#minCount").val();
+  let max = $("#maxCount").val();
+  const query = `${sentinel_tiler_url}/metadata/${sceneID}?'pmim=${min}&pmax=${max}`;
+
+  $.getJSON(query, (data) => {
+      scope.imgMetadata = data;
+      updateRasterTile();
+
+      let key = s2_name_to_key(sceneID);
+      const AWSurl = `https://sentinel-s2-l1c.s3.amazonaws.com/tiles/${key}/index.html`;
+
+      $(".scenes-info").removeClass('none');
+      $(".scenes-info .id").text(sceneID);
+      $(".scenes-info .date").text(sceneDate);
+      $(".scenes-info .url").html('<a href=' + AWSurl + ' target="_blanck">link</a>');
+
+      $('.errorMessage').addClass('none');
+  })
+      .fail(() => {
+          if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
+          if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+          $('.errorMessage').removeClass('none');
+          $(".scenes-info span").text('');
+          $(".scenes-info").addClass('none');
+      })
+      .always(() => {
+          $('.metaloader').addClass('off');
+      });
+};
 
 const updateRasterTile = () => {
     if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
     if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
 
+    const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
+
     let meta = scope.imgMetadata;
 
-    const rgb = $(".img-display-options .toggle-group.landsat input:checked").attr("data");
+    let tileURL;
+    let attrib;
+    let maxzoom;
+
+    const rgb= $(`.img-display-options .toggle-group.${sat} input:checked`).attr("data");
     const bands = rgb.split(',');
+
+    if (sat== 'sentinel') {
+      tileURL = `${sentinel_tiler_url}/tiles/${meta.sceneid}/{z}/{x}/{y}.png?` +
+          `rgb=${rgb}` +
+          '&tile=256' +
+          `&r_bds=${meta.rgbMinMax[bands[0]]}` +
+          `&g_bds=${meta.rgbMinMax[bands[1]]}` +
+          `&b_bds=${meta.rgbMinMax[bands[2]]}`;
+
+      attrib = '<span> &copy; Copernicus / ESA 2017</span>';
+      maxzoom = 15;
+    } else {
+      tileURL = `${landsat_tiler_url}/tiles/${meta.sceneid}/{z}/{x}/{y}.png?` +
+          `rgb=${bands}` +
+          '&tile=256' +
+          `&r_bds=${meta.rgbMinMax[bands[0]]}` +
+          `&g_bds=${meta.rgbMinMax[bands[1]]}` +
+          `&b_bds=${meta.rgbMinMax[bands[2]]}`;
+      if (rgb == '4,3,2') tileURL += '&pan=True';
+
+      attrib = '<a href="https://landsat.usgs.gov/landsat-8"> &copy; USGS/NASA Landsat</a>';
+      maxzoom = 14;
+    }
+
+    $(".scenes-info .rgb").text(rgb.toString());
 
     // NOTE: Calling 512x512px tiles is a bit longer but gives a
     // better quality image and reduce the number of tiles requested
@@ -210,25 +381,13 @@ const updateRasterTile = () => {
     // to get 256x256px reduces the number of lambda calls (but they are faster)
     // and reduce the quality because MapboxGl will oversample the tile.
 
-    let tileURL = `${landsat_tiler_url}/tiles/${meta.sceneid}/{z}/{x}/{y}.png?` +
-        `rgb=${bands}` +
-        '&tile=256' +
-        `&r_bds=${meta.rgbMinMax[bands[0]]}` +
-        `&g_bds=${meta.rgbMinMax[bands[1]]}` +
-        `&b_bds=${meta.rgbMinMax[bands[2]]}`;
-    if (rgb == '4,3,2') tileURL += '&pan=True';
-
-    const attrib = '<a href="https://landsat.usgs.gov/landsat-8"> &copy; USGS/NASA Landsat</a>';
-
-    $(".scenes-info .rgb").text(rgb.toString());
-
     map.addSource('raster-tiles', {
         type: "raster",
         tiles: [tileURL],
         attribution : [attrib],
         bounds: scope.imgMetadata.bounds,
         minzoom: 7,
-        maxzoom: 14,
+        maxzoom: maxzoom,
         tileSize: 256
     });
 
@@ -246,13 +405,22 @@ const updateRasterTile = () => {
 
 const updateMetadata = () => {
     if (!map.getSource('raster-tiles')) return;
-    initSceneL8(scope.imgMetadata.sceneid, scope.imgMetadata.date);
+
+    const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
+    if (sat == 'sentinel') {
+        initSceneS2(scope.imgMetadata.sceneid, scope.imgMetadata.date);
+    } else {
+        initSceneL8(scope.imgMetadata.sceneid, scope.imgMetadata.date);
+    }
 };
 
 
 const reset = () => {
   if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
   if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
+
+  map.setFilter("S2_Highlighted", ["in", "Name", ""]);
+  map.setFilter("S2_Selected", ["in", "Name", ""]);
 
   map.setFilter("L8_Highlighted", ["in", "PATH", ""]);
   map.setFilter("L8_Selected", ["in", "PATH", ""]);
@@ -272,7 +440,7 @@ const reset = () => {
   $("#maxCount").val(95);
 
   $(".img-display-options .toggle-group input").prop('checked', false);
-  $(".img-display-options .toggle-group.landsat input#default").prop('checked', true);
+  $(".img-display-options .toggle-group input#default").prop('checked', true);
 
   $('.map').removeClass('in');
   $('.list-img').addClass('none');
@@ -283,14 +451,31 @@ const reset = () => {
 
 
 const getFeatures = (e) => {
-    let features = map.queryRenderedFeatures(e.point, {layers: ['L8_Grid']});
-    let pr = ["in", "PATH", ""];
-    if (features.length !== 0) {
-        pr =  [].concat.apply([], ['any', features.map(e => {
-            return ["all", ["==", "PATH", e.properties.PATH], ["==", "ROW", e.properties.ROW]];
-        })]);
+
+    const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
+    let features;
+    let pr;
+
+    if (sat == 'sentinel') {
+      pr = ["==", "Name", ""];
+      features = map.queryRenderedFeatures(e.point, {layers: ['S2_Grid']});
+      if (features.length !== 0) {
+          pr = [].concat.apply([], ['any', features.map(e => {
+              return ["==", "Name", e.properties.Name];
+          })]);
+      }
+      map.setFilter("S2_Highlighted", pr);
+    } else {
+      pr = ["in", "PATH", ""];
+      features = map.queryRenderedFeatures(e.point, {layers: ['L8_Grid']});
+      if (features.length !== 0) {
+          pr =  [].concat.apply([], ['any', features.map(e => {
+              return ["all", ["==", "PATH", e.properties.PATH], ["==", "ROW", e.properties.ROW]];
+          })]);
+      }
+      map.setFilter("L8_Highlighted", pr);
     }
-    map.setFilter("L8_Highlighted", pr);
+
     return features;
 };
 
@@ -304,7 +489,11 @@ document.getElementById("btn-clear").onclick = () => {reset();};
 const button = document.getElementById('dl');
 button.addEventListener('click', (e) => {
     map.getCanvas().toBlob(function(blob) {
-        saveAs(blob, 'map.png');
+        const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
+        let bands = $(`.img-display-options .toggle-group.${sat} input:checked`).attr("data");
+        bands = bands.replace(/,/g, '');
+        const imgName = `${scope.imgMetadata.sceneid}_${bands}.png`
+        saveAs(blob, imgName);
     });
 });
 
@@ -312,6 +501,34 @@ const showSiteInfo = () => {
     $('.site-info').toggleClass('in');
     map.resize();
 };
+
+
+const updateSat= () => {
+  reset();
+
+  const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
+  if (sat == 'sentinel') {
+      ['L8_Grid', 'L8_Highlighted', 'L8_Selected'].forEach(function (e) {
+          map.setLayoutProperty(e, 'visibility', 'none');
+      });
+      ['S2_Grid', 'S2_Highlighted', 'S2_Selected'].forEach(function (e) {
+          map.setLayoutProperty(e, 'visibility', 'visible');
+      });
+  } else {
+      ['S2_Grid', 'S2_Highlighted', 'S2_Selected'].forEach(function (e) {
+          map.setLayoutProperty(e, 'visibility', 'none');
+      });
+      ['L8_Grid', 'L8_Highlighted', 'L8_Selected'].forEach(function (e) {
+          map.setLayoutProperty(e, 'visibility', 'visible');
+      });
+  }
+
+  $(".img-display-options .toggle-group").toggleClass('none');
+  $(`.img-display-options .toggle-group input#default`).prop('checked', true);
+};
+
+const toggle = document.getElementById('satellite-toggle');
+toggle.addEventListener('change', updateSat);
 
 
 var map = new mapboxgl.Map({
@@ -322,7 +539,7 @@ var map = new mapboxgl.Map({
     attributionControl: true,
     preserveDrawingBuffer: true,
     minZoom: 3,
-    maxZoom: 14
+    maxZoom: 15
 });
 
 map.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -333,7 +550,13 @@ map.on('click', (e) => {
     $('.errorMessage').addClass('none');
     const features = getFeatures(e);
     if (features.length !== 0) {
-        buildQueryAndRequestL8(features);
+        const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
+        if (sat == 'sentinel') {
+            buildQueryAndRequestS2(features);
+        } else {
+            buildQueryAndRequestL8(features);
+        }
+
         const geojson = { "type": "FeatureCollection", "features": features};
         const extent = turf.bbox(geojson);
         const llb = mapboxgl.LngLatBounds.convert([[extent[0],extent[1]], [extent[2],extent[3]]]);
@@ -348,7 +571,7 @@ map.on('load', () => {
 
         showSiteInfo();
         $('#btn-clear').removeClass('none');
-        
+
         let sceneid = params.sceneid;
         let scene_info;
         if (/L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|RT)/.exec(sceneid)) {
@@ -407,6 +630,63 @@ map.on('load', () => {
             "line-width": 1
         },
         "filter": ["in", "PATH", ""]
+    });
+
+    map.addSource('sentinel', {
+        'type': 'vector',
+        'url': 'mapbox://vincentsarago.0qowxm38'
+    });
+
+    map.addLayer({
+        'id': 'S2_Grid',
+        'type': 'fill',
+        'layout': {
+            'visibility': 'none'
+        },
+        'source': 'sentinel',
+        'source-layer': 'Sentinel2_Grid',
+        'paint': {
+            'fill-color': 'hsla(0, 0%, 0%, 0)',
+            'fill-outline-color': {
+                'base': 1,
+                'stops': [
+                    [0, 'hsla(207, 84%, 57%, 0.24)'],
+                    [22, 'hsl(207, 84%, 57%)']
+                ]
+            },
+            'fill-opacity': 1
+        }
+    });
+
+    map.addLayer({
+        'id': 'S2_Highlighted',
+        'type': 'fill',
+        'layout': {
+            'visibility': 'none'
+        },
+        'source': 'sentinel',
+        'source-layer': 'Sentinel2_Grid',
+        'paint': {
+            "fill-outline-color": "#1386af",
+            "fill-color": "#0f6d8e",
+            "fill-opacity": 0.3
+        },
+        'filter': ['in', 'Name', '']
+    });
+
+    map.addLayer({
+        'id': 'S2_Selected',
+        'type': 'line',
+        'layout': {
+            'visibility': 'none'
+        },
+        'source': 'sentinel',
+        'source-layer': 'Sentinel2_Grid',
+        "paint": {
+            "line-color": "#000",
+            "line-width": 1
+        },
+        'filter': ['in', 'Name', '']
     });
     $(".loading-map").addClass('off');
 });

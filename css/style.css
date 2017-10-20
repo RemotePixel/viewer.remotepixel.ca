@@ -230,7 +230,7 @@ ul.list-img li.list-element  img {
   border-color: inherit;
 }
 
-input:checked+.toggle {
+.img-display-options input:checked+.toggle {
   background: rgba(0, 0, 0, 0);
   color: #000;
 }
@@ -334,10 +334,9 @@ input:checked+.toggle {
 .map-top-right {
   position: absolute;
   display: block;
-  top: 100px;
-  right: 5px;
+  top: 10px;
+  right: 35px;
   z-index: 10;
-  font-size: 20px;
 }
 
 .map-bottom-right {
