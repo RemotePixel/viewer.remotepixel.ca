@@ -303,6 +303,7 @@ const initSceneL8 = (sceneID, sceneDate) => {
 const initSceneS2 = (sceneID, sceneDate) => {
   $(".metaloader").removeClass('off');
   $('.errorMessage').addClass('none');
+  $('#dl').addClass('none');
 
   let min = $("#minCount").val();
   let max = $("#maxCount").val();
@@ -320,6 +321,7 @@ const initSceneS2 = (sceneID, sceneDate) => {
       $(".scenes-info .date").text(sceneDate);
       $(".scenes-info .url").html('<a href=' + AWSurl + ' target="_blanck">link</a>');
 
+      $('#dl').removeClass('none');
       $('.errorMessage').addClass('none');
   })
       .fail(() => {
@@ -565,24 +567,6 @@ map.on('click', (e) => {
 });
 
 map.on('load', () => {
-    const params = parseParams(window.location.search)
-
-    if (params.sceneid) {
-
-        showSiteInfo();
-        $('#btn-clear').removeClass('none');
-
-        let sceneid = params.sceneid;
-        let scene_info;
-        if (/L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|RT)/.exec(sceneid)) {
-            scene_info = parseSceneid_c1(sceneid);
-        } else {
-            scene_info = parseSceneid_pre(sceneid);
-            sceneid = sceneid.replace(/LGN0[0-9]/, 'LGN00');
-        }
-
-        initSceneL8(sceneid, '');
-    }
 
     map.addSource('landsat', {
         "type": "vector",
@@ -689,6 +673,35 @@ map.on('load', () => {
         'filter': ['in', 'Name', '']
     });
     $(".loading-map").addClass('off');
+
+    const params = parseParams(window.location.search)
+    if (params.sceneid) {
+
+        showSiteInfo();
+
+        let sceneid = params.sceneid;
+        let scene_info;
+        let date = ''
+        if (/L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|RT)/.exec(sceneid)) {
+            scene_info = parseSceneid_c1(sceneid);
+            date = sceneid.split('_')[3];
+            date = `${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;
+            initSceneL8(sceneid, date);
+        } else if (/L[COTEM]8\d{6}\d{7}[A-Z]{3}\d{2}/.exec(sceneid)) {
+            scene_info = parseSceneid_pre(sceneid);
+            sceneid = sceneid.replace(/LGN0[0-9]/, 'LGN00');
+            initSceneL8(sceneid, date);
+        } else if (/S2[AB]_tile_[0-9]{8}_[0-9]{2}[A-Z]{3}_[0-9]/.exec(sceneid)) {
+            $(".map-top-right .toggle-group input[sat='sentinel']").prop('checked', true);
+            updateSat();
+            date = sceneid.split('_')[2];
+            date = `${date.slice(0,4)}-${date.slice(4,6)}-${date.slice(6,8)}`;
+            initSceneS2(sceneid, date);
+        }
+
+        $('#btn-clear').removeClass('none')
+    }
+
 });
 
 console.log("You think you can find something here ?");
