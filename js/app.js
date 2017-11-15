@@ -1,6 +1,5 @@
 "use strict";
 
-
 mapboxgl.accessToken = '';
 const landsat_tiler_url = '';
 const sentinel_tiler_url = '';
@@ -81,7 +80,7 @@ const s2_name_to_key = (scene) => {
     const num = info[4];
 
     return [
-        tile_info.uz,
+        tile_info.uz.replace(/^0/, ''),
         tile_info.lb,
         tile_info.sq,
         acquisitionDate.slice(0,4),
