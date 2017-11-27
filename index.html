@@ -22,11 +22,11 @@
 
 	<title>RemotePixel | Landsat / Sentinel Viewer</title>
 
-	<script src='https://api.mapbox.com/mapbox-gl-js/v0.40.1/mapbox-gl.js'></script>
-	<link href='https://api.mapbox.com/mapbox-gl-js/v0.40.1/mapbox-gl.css' rel='stylesheet' />
+	<script src='https://api.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
+	<link href='https://api.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet' />
 
-	<link href="https://api.mapbox.com/mapbox-assembly/v0.18.0/assembly.min.css" rel="stylesheet">
-	<script async defer src="https://api.mapbox.com/mapbox-assembly/v0.18.0/assembly.js"></script>
+	<link href="https://api.mapbox.com/mapbox-assembly/v0.19.0/assembly.min.css" rel="stylesheet">
+	<script async defer src="https://api.mapbox.com/mapbox-assembly/v0.19.0/assembly.js"></script>
 
   <link href="/css/style.css" rel="stylesheet">
 
@@ -43,10 +43,10 @@
 <body>
 	<div class="content">
 
-			<div class="site-info in">
+			<div class="site-info in z5">
 				<div class="info prose">
 					<button id='btn-close-help' class='btn-close-help' onclick='showSiteInfo()'>
-							<svg class='icon icon--l'><use xlink:href='#icon-close'/></svg>
+							<svg class='icon icon--l txt-xl'><use xlink:href='#icon-close'/></svg>
 					</button>
 
 					<h2>Landsat/Sentinel Viewer</h2>
@@ -110,7 +110,7 @@
 
 					<h4>Create your Own</h4>
 					<p>AWS Lambda powered <strong>landsat-tiler</strong> source code is on GitHub
-							<a href="https://github.com/mapbox/landsat-tiler"><svg class='icon icon--l'><use xlink:href='#icon-github'/></svg></a>
+							<a href="https://github.com/mapbox/landsat-tiler"><svg class='icon icon--l txt-xl'><use xlink:href='#icon-github'/></svg></a>
 					</p>
 
 					<h4>Contact</h4>
@@ -124,180 +124,201 @@
 						<a href="https://aws.amazon.com/" target="_blank" class="col col--3"><img class="img-responsive" src="img/awservice.png"></a>
 					</div>
 
-					<div class="site-version">Version: 1</div>
+					<div class="site-version">Version: 2.0</div>
 				</div>
 			</div>
 
 			<div class="main-pane">
 
-					<div class="option-panel">
-							<div class="img-display-options">
-								<span>RGB Combination </span>
+				<div id='menu' class='flex-child w240 w300-ml absolute ml6 mt6 bg-white z2'>
+					<ul id='toolbar' class='grid'>
+						<li id='rgb' class="col col--4 active" title="rgb" onclick="switchPane(this)">
+							<svg class='icon icon--l inline-block'><use xlink:href='#icon-menu'/></svg>
+						</li>
+						<li id='band' class="col col--4" title="band" onclick="switchPane(this)">
+							<svg class='icon icon--l inline-block'><use xlink:href='#icon-minus'/></svg>
+						</li>
+						<li id='process' class="col col--4" title="process" onclick="switchPane(this)">
+							<svg class='icon icon--l inline-block'><use xlink:href='#icon-raster'/></svg>
+						</li>
+					</ul>
 
-								<div class='toggle-group landsat'>
-									<label class='toggle-container'>
-										<input data="6,5,4" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>vegetation analysis</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="7,6,4" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>urban</div>
-									</label>
-									<label class='toggle-container'>
-										<input id='default' data="4,3,2" checked="checked" name='toggle-landsat' type='radio'/>
-										<div class='btn btn--stroke btn--darken50 toggle'>natural color</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="5,4,3" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>false color</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="5,6,4" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>land/water</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="7,6,5" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>atmospheric penetration</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="6,5,2" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>agriculture</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="5,6,2" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>healthy veg</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="7,5,2" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>forest burn</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="7,5,4" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>shortwave ir</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="5,7,1" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>false2</div>
-									</label>
-									<label class='toggle-container'>
-										<input data="7,5,3" name='toggle-landsat' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>natural w/ atmo</div>
-									</label>
-								</div>
+					<div id='menu-content' class='relative'>
 
-								<div class='toggle-group sentinel none'>
-									<label class='toggle-container'>
-										<input data='11,8A,04' name='toggle-sentinel' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>vegetation analysis</div>
-									</label>
-									<label class='toggle-container'>
-										<input data='12,11,04' name='toggle-sentinel' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>urban</div>
-									</label>
-									<label class='toggle-container'>
-										<input id='default' data='04,03,02' checked="checked" name='toggle-sentinel' type='radio'/>
-										<div class='btn btn--stroke btn--darken50 toggle'>natural color</div>
-									</label>
-									<label class='toggle-container'>
-										<input data='08,04,03' name='toggle-sentinel' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>false color</div>
-									</label>
-									<label class='toggle-container'>
-										<input data='8A,11,04' name='toggle-sentinel' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>land/water</div>
-									</label>
-									<label class='toggle-container'>
-										<input data='12,11,8A' name='toggle-sentinel' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>atmospheric penetration</div>
-									</label>
-									<label class='toggle-container'>
-										<input data='11,8A,02' name='toggle-sentinel' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>agriculture</div>
-									</label>
-									<label class='toggle-container'>
-										<input data='8A,11,02' name='toggle-sentinel' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>healthy veg</div>
-									</label>
-									<label class='toggle-container'>
-										<input data='12,8A,04' name='toggle-sentinel' type='radio' />
-										<div class='btn btn--stroke btn--darken50 toggle'>shortwave_ir</div>
-									</label>
-								</div>
-
-								<span>Cumulative cut </span>
-
-								<div class="inputHisto">
-									<input id="minCount" class='input col--2' value='5' />
-									<span class="col--2 center"> - </span>
-									<input id="maxCount" class='input col--2' value='95' />
-									<span class="col--2 pl6"> %</span>
-
-									<button class='btn btn--stroke btn--darken50' onclick="updateMetadata()">Apply</button>
-								</div>
-
+						<section id='rgb' class="px12 py12 active">
+							<div class='txt-h5 mb12 color-black'>Band Combinations</div>
+							<div class='select-container wmax-full'>
+								<select id='rgb-selection' class='select select--s select--stroke  wmax-full color-black'>
+									<option value='4,3,2'>Natural Color (4,3,2)</option>
+									<option value='7,6,4'>False Color Urban (7,6,4)</option>
+									<option value='5,4,3'>Color Infrared Vegetation (5,4,3)</option>
+									<option value='6,5,2'>Agriculture (6,5,2)</option>
+									<option value='7,6,5'>Atmospheric Penetration (7,6,5)</option>
+									<option value='5,6,2'>Healthy Vegetation (5,6,2)</option>
+									<option value='7,5,2'>Forest Burn (7,5,2)</option>
+									<option value='5,6,4'>Land/Water (5,6,4)</option>
+									<option value='7,5,3'>Natural With Atmo Removal (7,5,3)</option>
+									<option value='7,5,4'>Shortwave Infrared (7,5,4)</option>
+									<option value='5,7,1'>False color 2 (5,7,1)</option>
+									<option value='6,5,4'>Vegetation Analysis (6,5,4)</option>
+									<option value='custom'>Custom</option>
+								</select>
+								<div class='select-arrow color-black'></div>
 							</div>
+
+							<div id='rgb-buttons' class='align-center px6 py6'>
+								<div class='select-container'>
+									<select id='r' disabled class='select select--stroke select--stroke--2 color-red mx6 my6'>
+										<option value="1">01</option>
+										<option value="2">02</option>
+										<option value="3">03</option>
+										<option selected="selected" value="4">04</option>
+										<option value="5">05</option>
+										<option value="6">06</option>
+										<option value="7">07</option>
+										<option value="9">09</option>
+										<option value="10">10</option>
+										<option value="11">11</option>
+									</select>
+								</div>
+
+								<div class='select-container'>
+									<select id='g' disabled class='select select--stroke select--stroke--2 color-green mx6 my6'>
+										<option value="1">01</option>
+										<option value="2">02</option>
+										<option value="3" selected="selected">03</option>
+										<option value="4">04</option>
+										<option value="5">05</option>
+										<option value="6">06</option>
+										<option value="7">07</option>
+										<option value="9">09</option>
+										<option value="10">10</option>
+										<option value="11">11</option>
+									</select>
+								</div>
+
+								<div class='select-container'>
+									<select id='b' disabled class='select select--stroke select--stroke--2 color-blue mx6 my6'>
+										<option value="1">01</option>
+										<option value="2" selected="selected">02</option>
+										<option value="3">03</option>
+										<option value="4">04</option>
+										<option value="5">05</option>
+										<option value="6">06</option>
+										<option value="7">07</option>
+										<option value="9">09</option>
+										<option value="10">10</option>
+										<option value="11">11</option>
+									</select>
+								</div>
+							</div>
+						</section>
+
+						<section id='band' class="px12 py12">
+							<div class='txt-h5 mb12 color-black'>Band Selection</div>
+							<div id='band-buttons' class='px6 py6'>
+								<button onclick='updateBands(this)' value='1' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m active'>01</button>
+								<button onclick='updateBands(this)' value='2' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>02</button>
+								<button onclick='updateBands(this)' value='3' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>03</button>
+								<button onclick='updateBands(this)' value='4' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>04</button>
+								<button onclick='updateBands(this)' value='5' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>05</button>
+								<button onclick='updateBands(this)' value='6' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>06</button>
+								<button onclick='updateBands(this)' value='7' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>07</button>
+								<button onclick='updateBands(this)' value='9' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>09</button>
+								<button onclick='updateBands(this)' value='10' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>10</button>
+								<button onclick='updateBands(this)' value='11' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>11</button>
+							</div>
+						</section>
+
+						<section id='process' class="px12 py12">
+							<div class='txt-h5 mb12 color-black'>Band ratios</div>
+							<div class='select-container w-full'>
+								<select id='ratio-selection' class='select select--s select--stroke  w-full color-black'>
+									<option value="ndvi">NDVI</option>
+									<option value="ndsi">NDSI</option>
+									<option value="ndwi">NDWI</option>
+									<option value="ac-index">AC-Index</option>
+								</select>
+								<div class='select-arrow color-black'></div>
+							</div>
+						</section>
+
+						<div id='params' class="px12 py12 relative">
+							<div class='txt-h5 mb12 color-black'>Histogram Cut</div>
+							<div class='px6 py6'>
+								<input id="minCount" class='input input--s wmax60 inline-block align-center color-black' value='5' />
+								<input id="maxCount" class='input input--s wmax60 inline-block align-center color-black ml12' value='95' />
+								<button class='btn bts--xs btn--stroke bg-darken25-on-hover inline-block txt-s color-black ml12' onclick="updateMetadata()">Apply</button>
+							</div>
+						</div>
 					</div>
 
-					<div id="map" class="map">
+					<button id='btn-hide'>
+						<svg id='left' class='icon'><use xlink:href='#icon-arrow-left'/></svg>
+						<svg id='right' class='icon none'><use xlink:href='#icon-arrow-right'/></svg>
+					</button>
+				</div>
 
-							<div class="map-top-right">
-								<div id='satellite-toggle' class='toggle-group txt-m mr18'>
-								  <label class='toggle-container'>
-								    <input sat="landsat" checked name='toggle-sat' type='radio' />
-								    <div class='toggle'>Landsat</div>
-								  </label>
-								  <label class='toggle-container'>
-								    <input sat="sentinel" name='toggle-sat' type='radio' />
-								    <div class='toggle'>Sentinel</div>
-								  </label>
-								</div>
-							</div>
+			<div id="map" class="map">
+				<div class="map-top-right z2">
+					<div id='satellite-toggle' class='toggle-group txt-m mr18'>
+					  <label class='toggle-container'>
+					    <input sat="landsat" checked name='toggle-sat' type='radio' />
+					    <div class='toggle'>Landsat</div>
+					  </label>
+					  <label class='toggle-container'>
+					    <input sat="sentinel" name='toggle-sat' type='radio' />
+					    <div class='toggle'>Sentinel</div>
+					  </label>
+					</div>
+				</div>
 
-							<div class="map-bottom-right">
-									<button id='btn-clear' class='shadow-darken10-bold-on-hover round none'>
-										<svg class='icon icon--l'><use xlink:href='#icon-close'/></svg>
-									</button>
+				<div class="map-bottom-right z1">
+					<button id='btn-clear' class='shadow-darken10-bold-on-hover round none'>
+						<svg class='icon icon--l'><use xlink:href='#icon-close'/></svg>
+					</button>
 
-									<button id="dl" class='shadow-darken10-bold-on-hover round none'>
-										<svg class='icon icon--l'><use xlink:href='#icon-picture'/></svg>
-									</button>
+					<button id="dl" class='shadow-darken10-bold-on-hover round none'>
+						<svg class='icon icon--l'><use xlink:href='#icon-picture'/></svg>
+					</button>
 
-									<button id='btn-info' class='shadow-darken10-bold-on-hover round' onclick='showSiteInfo()'>
-										<svg class='icon icon--l'><use xlink:href='#icon-question'/></svg>
-									</button>
-							</div>
+					<button id='btn-info' class='shadow-darken10-bold-on-hover round' onclick='showSiteInfo()'>
+						<svg class='icon icon--l'><use xlink:href='#icon-question'/></svg>
+					</button>
+				</div>
 
-			        <div class="scenes-info none">
-			          <span class="id"></span>
-			          <span class="date"></span>
-			          <span class="rgb"></span>
-								<span class="url"></span>
-			        </div>
+        <div class="scenes-info none z5">
+        	<span class="id"></span>
+          <span class="date"></span>
+					<span class="url"></span>
+        </div>
 
-		        <div class="loading-map">
-		          <div class="middle-center">
-		            <span>Loading</span>
-		            <div class="round animation-spin animation--infinite animation--speed-1">
-		              <svg class='icon icon--l inline-block'><use xlink:href='#icon-satellite'/></svg>
-		            </div>
-		          </div>
-		        </div>
+        <div class="loading-map z3">
+          <div class="middle-center">
+            <span>Loading</span>
+            <div class="round animation-spin animation--infinite animation--speed-1">
+              <svg class='icon icon--l inline-block'><use xlink:href='#icon-satellite'/></svg>
+            </div>
+          </div>
+        </div>
 
-						<span class="metaloader off">
-							<div class="round animation-spin animation--infinite animation--speed-1">
-								<svg class='icon icon--l color-blue inline-block'><use xlink:href='#icon-satellite'/></svg>
-							</div>
-						</span>
+				<span class="metaloader off z5">
+					<div class="round animation-spin animation--infinite animation--speed-1">
+						<svg class='icon icon--l color-blue inline-block'><use xlink:href='#icon-satellite'/></svg>
+					</div>
+				</span>
 
-						<span class="errorMessage none">
-								<svg class='icon icon--l'><use xlink:href='#icon-alert'/></svg>
-								<span >Error</span>
-						</span>
+				<span class="errorMessage none z5">
+					<svg class='icon icon--l inline-block'><use xlink:href='#icon-alert'/></svg>
+					<span >Error</span>
+				</span>
 
-						<div class='img-over-info'></div>
-		      </div>
+				<div class='img-over-info'></div>
+      </div>
 
-					<ul class="list-img none"></ul>
+			<span id='nodata-error' class="middle-center color-white txt-m none">No image found, Please select another tile</span>
+
+			<ul class="list-img none"></ul>
     </div>
 	</div>
 
