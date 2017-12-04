@@ -401,7 +401,7 @@ const updateRasterTile = () => {
     bounds: scope.imgMetadata.bounds,
     minzoom: 7,
     maxzoom: maxzoom,
-    tileSize: 256
+    tileSize: 512 //params.tile
   });
 
   map.addLayer({
@@ -619,7 +619,7 @@ const landsatUI = () => {
   $('#g option[value="3"]').attr('selected', 'selected');
   $('#b option[value="2"]').attr('selected', 'selected');
 
-  $(`#band-buttons`).empty();
+  $('#band-buttons').empty();
   $('#band-buttons').append(
     '<button onclick="updateBands(this)" value="1" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m active">01</button>' +
     '<button onclick="updateBands(this)" value="2" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">02</button>' +
@@ -631,6 +631,13 @@ const landsatUI = () => {
     '<button onclick="updateBands(this)" value="9" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">09</button>' +
     '<button onclick="updateBands(this)" value="10" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">10</button>' +
     '<button onclick="updateBands(this)" value="11" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">11</button>');
+
+  $('#ratio-selection').empty();
+  $('#ratio-selection').append(
+    '<option value="ndvi">NDVI</option>' +
+    '<option value="ndsi">NDSI</option>' +
+    '<option value="ndwi">NDWI</option>' +
+    '<option value="ac-index">AC-Index</option>');
 };
 
 
@@ -670,7 +677,7 @@ const sentinelUI = () => {
   $('#g option[value="03"]').attr('selected', 'selected');
   $('#b option[value="02"]').attr('selected', 'selected');
 
-  $(`#band-buttons`).empty();
+  $('#band-buttons').empty();
   $('#band-buttons').append(
     '<button onclick="updateBands(this)" value="01" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m active">01</button>' +
     '<button onclick="updateBands(this)" value="02" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">02</button>' +
@@ -685,6 +692,11 @@ const sentinelUI = () => {
     '<button onclick="updateBands(this)" value="10" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">10</button>' +
     '<button onclick="updateBands(this)" value="11" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">11</button>' +
     '<button onclick="updateBands(this)" value="12" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">12</button>');
+
+    $('#ratio-selection').empty();
+    $('#ratio-selection').append(
+      '<option value="ndvi">NDVI</option>' +
+      '<option value="ndsi">NDSI</option>');
 };
 
 document.getElementById('satellite-toggle').addEventListener('change', updateSat);
