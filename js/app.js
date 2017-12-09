@@ -5,7 +5,7 @@ const landsat_tiler_url = '';
 const sentinel_tiler_url = '';
 const endpoint_token = '';
 
-const sat_api = 'https://api.developmentseed.org/satellites/?search=';
+const sat_api = 'https://search.remotepixel.ca';
 
 let scope = {};
 
@@ -49,7 +49,6 @@ const parseSceneid_c1 = (sceneid) => {
 };
 
 const parseSceneid_pre = (sceneid) => {
-  sceneid = sceneid.replace('LGN01', 'LGN00');
   return {
     sensor:  sceneid.slice(1,2),
     satellite: sceneid.slice(2,3),
@@ -99,37 +98,42 @@ const buildQueryAndRequestL8 = (features) => {
   if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
   if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
 
-  const prStr = [].concat.apply([], features.map(function(e){
-    return "(path:" + e.properties.PATH.toString() + "+AND+row:" + e.properties.ROW.toString() + ")";
-  })).join('+OR+');
-
-  const query = `${sat_api}satellite_name:landsat-8+AND+(${prStr})&limit=2000`;
   const results = [];
 
-  $.getJSON(query).done()
+  Promise.all(features.map(e => {
+    const row = zeroPad(e.properties.ROW, 3);
+    const path = zeroPad(e.properties.PATH, 3);
+    const query = `${sat_api}/landsat?row=${row}&path=${path}`;
+    return $.getJSON(query).done()
+      .then(data => {
+        if (data.meta.found === 0) throw new Error('No image found in sat-api');
+        return data.results;
+      })
+      .catch(err => {
+        console.warn(err);
+        return [];
+      });
+  }))
     .then(data => {
-      if (data.meta.found === 0) throw new Error('No image found in sat-api');
-
-      for (let i = 0; i < data.results.length; i += 1) {
+      data = [].concat.apply([], data);
+      if (data.length === 0) throw new Error('No image found in sat-api');
+      for (let i = 0; i < data.length; i += 1) {
         let scene = {};
-        scene.path = data.results[i].path.toString();
-        scene.row = data.results[i].row.toString();
-        scene.grid = data.results[i].path + '/' + data.results[i].row;
-        scene.date = data.results[i].date;
-        scene.cloud = data.results[i].cloud_coverage;
-        scene.browseURL = data.results[i].browseURL.replace('http://', 'https://');
-        scene.thumbURL = scene.browseURL.replace('browse/', 'browse/thumbnails/')
-        scene.sceneID = data.results[i].scene_id;
-        scene.productID = data.results[i].LANDSAT_PRODUCT_ID;
-        scene.awsID = (Date.parse(scene.date) < Date.parse('2017-05-01')) ? data.results[i].scene_id.replace(/LGN0[0-9]/, 'LGN00'): data.results[i].LANDSAT_PRODUCT_ID;
+        scene.path = data[i].path;
+        scene.row = data[i].row;
+        scene.date = data[i].date;
+        scene.cloud = data[i].cloud_coverage;
+        scene.browseURL = data[i].browseURL;
+        scene.thumbURL = data[i].thumbURL;
+        scene.scene_id = data[i].scene_id;
+        scene.type = data[i].type;
         results.push(scene);
       }
-
       results.sort(sortScenes);
 
       for (let i = 0; i < results.length; i += 1) {
         $('.list-img').append(
-          `<li data-row="${results[i].row}" data-path="${results[i].path}" data-date="${results[i].date}" data-cloud="${results[i].cloud}" class="list-element" onclick="initSceneL8('${results[i].awsID}','${results[i].date}')" onmouseover="overImage(this)" onmouseout="outImage()">` +
+          `<li data-row="${results[i].row}" data-path="${results[i].path}" data-type="${results[i].type}" data-date="${results[i].date}" data-cloud="${results[i].cloud}" class="list-element" onclick="initSceneL8('${results[i].scene_id}','${results[i].date}')" onmouseover="overImageL8(this)" onmouseout="outImageL8()">` +
             `<img class="img-item" src="${results[i].thumbURL}">` +
           '</li>'
         );
@@ -161,42 +165,42 @@ const buildQueryAndRequestS2 = (features) => {
   if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
   if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
 
-  const prStr = [].concat.apply([], features.map(function(e){
-    return "(grid_square:" +
-      e.properties.Name.slice(3, 5) +
-      "+AND+latitude_band:" +
-      e.properties.Name.slice(2, 3) +
-      "+AND+utm_zone:" +
-      e.properties.Name.slice(0, 2) + ")";
-  })).join('+OR+');
-
-  const query = `${sat_api}satellite_name:sentinel-2+AND+(${prStr})&limit=2000`;
   const results = [];
 
-  $.getJSON(query).done()
-    .then(data => {
-      if (data.meta.found === 0) throw new Error('No image found in sat-api');
+  Promise.all(features.map(e => {
+    const utm = e.properties.Name.slice(0, 2);
+    const lat = e.properties.Name.slice(2, 3);
+    const grid = e.properties.Name.slice(3, 5);
 
-      for (let i = 0; i < data.results.length; i += 1) {
+    const query = `${sat_api}/sentinel?utm=${utm}&grid=${grid}&lat=${lat}`;
+    return $.getJSON(query).done()
+      .then(data => {
+        if (data.meta.found === 0) throw new Error('No image found in sat-api');
+        return data.results;
+      })
+      .catch(err => {
+        console.warn(err);
+        return [];
+      });
+  }))
+    .then(data => {
+      data = [].concat.apply([], data);
+      if (data.length === 0) throw new Error('No image found in sat-api');
+      for (let i = 0; i < data.length; i += 1) {
         let scene = {};
-        scene.date = data.results[i].date;
-        scene.cloud = data.results[i].cloud_coverage;
-        scene.utm_zone = data.results[i].utm_zone.toString();
-        scene.grid_square = data.results[i].grid_square;
-        scene.coverage = data.results[i].data_coverage_percentage;
-        scene.latitude_band = data.results[i].latitude_band;
-        scene.sceneID = data.results[i].scene_id;
-        scene.browseURL = data.results[i].thumbnail.replace('.jp2', ".jpg");
-        scene.path = data.results[i].aws_path.replace('tiles', "#tiles");
-        scene.grid = scene.utm_zone + scene.latitude_band + scene.grid_square;
+        scene.date = data[i].date
+        scene.cloud = data[i].cloud;
+        scene.browseURL = data[i].browseURL;
+        scene.scene_id = data[i].scene_id;
+        scene.tile = data[i].scene_id.split('_')[3];
+        scene.sat = scene.scene_id.slice(0,3);
         results.push(scene);
       }
-
       results.sort(sortScenes);
 
       for (let i = 0; i < results.length; i += 1) {
         $('.list-img').append(
-          `<li data-grid="${results[i].grid}" data-date="${results[i].date}" data-cloud="${results[i].cloud}" class="list-element" onclick="initSceneS2('${results[i].sceneID}','${results[i].date}')" onmouseover="overImageS2(this)" onmouseout="outImageS2()">` +
+          `<li data-tile="${results[i].tile}" data-sat="${results[i].sat}" data-date="${results[i].date}" data-cloud="${results[i].cloud}" class="list-element" onclick="initSceneS2('${results[i].scene_id}','${results[i].date}')" onmouseover="overImageS2(this)" onmouseout="outImageS2()">` +
             `<img class="img-item" src="${results[i].browseURL}">` +
           '</li>'
         );
@@ -206,17 +210,17 @@ const buildQueryAndRequestS2 = (features) => {
       $('.list-img').removeClass('none');
       $('#btn-clear').removeClass('none');
       map.resize();
-  })
-  .catch(err => {
-    console.warn(err);
-    $('#nodata-error').removeClass('none');
-  })
-  .then(() => {
-    $(".metaloader").addClass('off');
-  });
+    })
+    .catch(err => {
+      console.warn(err);
+      $('#nodata-error').removeClass('none');
+    })
+    .then(() => {
+      $(".metaloader").addClass('off');
+    });
 };
 
-const overImage = (element) => {
+const overImageL8 = (element) => {
   let hoverstr = [
     'all',
     ['==', 'PATH', parseInt($(element)[0].getAttribute('data-path'))],
@@ -224,27 +228,29 @@ const overImage = (element) => {
   ];
   map.setFilter("L8_Highlighted", hoverstr);
 
+  const sceneType = $(element)[0].getAttribute('data-type');
   const sceneDate = $(element)[0].getAttribute('data-date');
   const sceneCloud = $(element)[0].getAttribute('data-cloud');
   $('.img-over-info').empty();
   $('.img-over-info').removeClass('none');
-  $('.img-over-info').append(`<span>${sceneDate} | ${sceneCloud}% </span>`);
+  $('.img-over-info').append(`<span>${sceneType} | ${sceneDate} | ${sceneCloud}% </span>`);
 };
 
-const outImage = () => {
+const outImageL8 = () => {
   map.setFilter("L8_Highlighted", ['all', ['==', 'PATH', ''], ['==', 'ROW', '']]);
   $('.img-over-info').addClass('none');
 };
 
 const overImageS2 = (element) => {
-  const grid = $(element)[0].getAttribute('data-grid');
-  map.setFilter("S2_Highlighted", ['in', 'Name', grid]);
+  const tile = $(element)[0].getAttribute('data-tile');
+  map.setFilter("S2_Highlighted", ['in', 'Name', tile]);
 
+  const sceneSat = $(element)[0].getAttribute('data-sat');
   const sceneDate = $(element)[0].getAttribute('data-date');
   const sceneCloud = $(element)[0].getAttribute('data-cloud');
   $('.img-over-info').empty();
   $('.img-over-info').removeClass('none');
-  $('.img-over-info').append(`<span>${sceneDate} | ${sceneCloud}% </span>`);
+  $('.img-over-info').append(`<span>${sceneSat} | ${sceneDate} | ${sceneCloud}% </span>`);
 };
 
 const outImageS2 = () => {
@@ -310,7 +316,8 @@ const initSceneS2 = (sceneID, sceneDate) => {
       updateRasterTile();
 
       let key = s2_name_to_key(sceneID);
-      const AWSurl = `https://sentinel-s2-l1c.s3.amazonaws.com/tiles/${key}/index.html`;
+
+      const AWSurl = `http://sentinel-s2-l1c.s3-website.eu-central-1.amazonaws.com/#tiles/${key}/`;
       $(".scenes-info").removeClass('none');
       $(".scenes-info .id").text(sceneID);
       $(".scenes-info .date").text(sceneDate);
@@ -652,7 +659,6 @@ const sentinelUI = () => {
     '<option value="8A,11,02">Healthy Vegetation (8A,11,02)</option>' +
     '<option value="11,8A,02">Agriculture (11,8A,02)</option>' +
     '<option value="8A,11,04">Land/Water (8A,11,04)</option>' +
-    '<option value="12,11,8A">Atmospheric Penetration (12,11,8A)</option>' +
     '<option value="12,8A,04">Shortwave Infrared (7,5,4)</option>' +
     '<option value="custom">Custom</option>');
 
