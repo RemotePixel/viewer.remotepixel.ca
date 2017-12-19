@@ -8,19 +8,19 @@
 
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:site" content="@RemotePixel" />
-	<meta name="twitter:title" content="RemotePixel Landsat Viewer" />
-	<meta name="twitter:description" content="A simple and fast Landsat and Sentinel viewer powered by AWS Lambda" />
+	<meta name="twitter:title" content="RemotePixel Viewer" />
+	<meta name="twitter:description" content="A simple and fast Satellite data viewer viewer powered by AWS Lambda" />
 
 	<meta name="twitter:creator" content="@_VincentS_" />
 	<meta name="twitter:image:src" content="https://viewer.remotepixel.ca/img/viewer.jpg" />
 
-	<meta property="og:title" content="RemotePixel Landsat / Sentinel Viewer" />
+	<meta property="og:title" content="RemotePixel Viewer" />
 	<meta property="og:url" content="https://viewer.remotepixel.ca" />
 	<meta property="og:image" content="https://viewer.remotepixel.ca/img/viewer.jpg" />
-	<meta property="og:description" content="A simple and fast Landsat and Sentinel viewer powered by AWS Lambda" />
-	<meta property="og:site_name" content="Remote Pixel" />
+	<meta property="og:description" content="A simple and fast Satellite data viewer powered by AWS Lambda" />
+	<meta property="og:site_name" content="RemotePixel" />
 
-	<title>RemotePixel | Landsat / Sentinel Viewer</title>
+	<title>RemotePixel Viewer</title>
 
 	<script src='https://api.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
 	<link href='https://api.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet' />
@@ -38,6 +38,7 @@
 	  ga('create', 'UA-60678866-1', 'auto');
 	  ga('send', 'pageview');
 	</script>
+
 </head>
 
 <body>
@@ -49,8 +50,8 @@
 							<svg class='icon icon--l txt-xl'><use xlink:href='#icon-close'/></svg>
 					</button>
 
-					<h2>Landsat/Sentinel Viewer</h2>
-					<p>A simple and fast Landsat and Sentinel viewer powered by AWS Lambda</p>
+					<h2>RemotePixel Viewer</h2>
+					<p>A simple and fast Landsat-8, Sentinel-2 and CBERS-4 data viewer powered by AWS Lambda</p>
 
 					<img class="img-responsive center" src="img/viewer.jpg">
 
@@ -61,25 +62,23 @@
 							<li>Change the band combination and the histogram cut on the option pane (top left)</li>
 					</ul>
 
-					<h4>Tiles</h4>
-					<p>Tile served via <strong>lambda tilers</strong> are TOA (Top Of Atmosphere) corrected and rescaled to 0->255 rgb values.</p>
+					<h4>Map Tiles</h4>
+					<p>Tile served are TOA (Top Of Atmosphere) corrected and rescaled to 0->255 rgb values. Each tile is a direct response of ONE AWS Lambda function.</p>
 					<p>Landsat True Color RGB (4,3,2) is panshaperpenned and serverd at 15m resolution. Sentinel-2 is served at 10m resolution.</p>
 
 					<h4>Info</h4>
-					<p>Landsat/Sentinel search results is powered by
+					<p>Landsat/Sentinel/CBERS search results is powered by
 						<a href="https://github.com/remotepixel/aws-sat-api" target="_blank">RemotePixel Satellite API</a>.
 				  </p>
 
-					<p>Landsat and Sentinel images previews are from <a href="https://earthexplorer.usgs.gov" target="_blank">USGS Earth Explorer</a>
-						and <a href="http://sentinel-pds.s3-website.eu-central-1.amazonaws.com" target="_blank"> Sentinel on AWS S3</a>
-						(via <a href="http://www.sinergise.com" target="_blank">Sinergise</a>).</p>
+					<p>Images previews are from Landsat, Sentinel and CBERS <a href="https://aws.amazon.com/fr/public-datasets/" target="_blank">AWS Public Dataset</a>.</p>
 
 					<p>This project is powered by Mapbox-GL API and the awesome vector tile technology develloped by <a href="https://mapbox.com" target="_blank">Mapbox</a>.</p>
 
-					<p>Continue reading: <a href="https://blog.mapbox.com/combining-the-power-of-aws-lambda-and-rasterio-8ffd3648c348">Blog post</a> on Mapbox.com</p>
+					<p>Want more info about AWS Lambda for raster tile serving, continue reading: <a href="https://blog.mapbox.com/combining-the-power-of-aws-lambda-and-rasterio-8ffd3648c348">Blog post</a> on Mapbox.com</p>
 
 					<h4>Public dataset on AWS</h4>
-					<p>Landsat data available on AWS are in Level <strong>1T</strong>:</p>
+					<p>Landsat-8 data available on AWS are in Level <strong>1T</strong>:</p>
 					<blockquote>
 							Standard Terrain Correction (Level 1T) -
 							provides systematic radiometric and geometric accuracy by incorporating ground
@@ -92,7 +91,7 @@
 							<p>Info: <a href="http://landsat.usgs.gov/Landsat_Processing_Details.php" target="_blank">http://landsat.usgs.gov/</a></p>
 					</blockquote>
 
-					<p>Sentinel data available on AWS are in Level <strong>1C</strong>:</p>
+					<p>Sentinel-2 data available on AWS are in Level <strong>1C</strong>:</p>
 					<blockquote>
 						Level-1C processing includes radiometric and geometric corrections including ortho-rectification and spatial registration on a global reference system with sub-pixel accuracy.
 						Level-1C processing is broken down into the following steps:
@@ -108,10 +107,17 @@
 					</blockquote>
 
 
+					<p>CBERS-4:</p>
+					<blockquote>
+						DEMO, more info soon.
+					</blockquote>
+
 					<h4>Create your Own</h4>
-					<p>AWS Lambda powered <strong>landsat-tiler</strong> source code is on GitHub
-							<a href="https://github.com/mapbox/landsat-tiler"><svg class='icon icon--l txt-xl'><use xlink:href='#icon-github'/></svg></a>
-					</p>
+					<p><strong><a href="https://github.com/mapbox/landsat-tiler">https://github.com/mapbox/landsat-tiler</a></strong></p>
+					<p><strong><a href="https://github.com/mapbox/sentinel-tiler">https://github.com/mapbox/sentinel-tiler</a></strong></p>
+					<p><strong><a href="https://github.com/mapbox/sentinel-tiler">https://github.com/mapbox/cbers-tiler</a></strong></p>
+
+					<p><strong><a href="https://github.com/remotepixel/viewer.remotepixel.ca">https://github.com/remotepixel/viewer.remotepixel.ca</a></strong></p>
 
 					<h4>Contact</h4>
 					<p>Questions or comments to <a href="mailto:contact@remotepixel.ca">contact@remotepixel.ca</a></p>
@@ -119,8 +125,8 @@
 					<h4>Thanks</h4>
 
 					<div class="thanks-images grid">
-						<a href="https://www.mapbox.com" target="_blank" class="col col--3 col--offl1"><img class="img-responsive" src="img/mapbox.png"></a>
-						<a href="https://aws.amazon.com/" target="_blank" class="col col--3"><img class="img-responsive" src="img/awservice.png"></a>
+						<a href="https://www.mapbox.com" target="_blank" class="col col--3 col--offl1 mr6 ml6"><img class="img-responsive" src="img/mapbox.png"></a>
+						<a href="https://aws.amazon.com/" target="_blank" class="col col--3 mr6 ml6"><img class="img-responsive" src="img/awservice.png"></a>
 					</div>
 
 					<div class="site-version">Version: 2.0</div>
@@ -245,8 +251,8 @@
 						<div id='params' class="px12 py12 relative">
 							<div class='txt-h5 mb12 color-black'>Histogram Cut</div>
 							<div class='px6 py6'>
-								<input id="minCount" class='input input--s wmax60 inline-block align-center color-black' value='5' />
-								<input id="maxCount" class='input input--s wmax60 inline-block align-center color-black ml12' value='95' />
+								<input id="minCount" class='input input--s wmax60 inline-block align-center color-black' value='2' />
+								<input id="maxCount" class='input input--s wmax60 inline-block align-center color-black ml12' value='98' />
 								<button class='btn bts--xs btn--stroke bg-darken25-on-hover inline-block txt-s color-black ml12' onclick="updateMetadata()">Apply</button>
 							</div>
 						</div>
@@ -254,20 +260,24 @@
 
 					<button id='btn-hide'>
 						<svg id='left' class='icon'><use xlink:href='#icon-arrow-left'/></svg>
-						<svg id='right' class='icon none'><use xlink:href='#icon-arrow-right'/></svg>
+						<!-- <svg id='right' class='icon none'><use xlink:href='#icon-arrow-right'/></svg> -->
 					</button>
 				</div>
 
 			<div id="map" class="map">
 				<div class="map-top-right z2">
-					<div id='satellite-toggle' class='toggle-group txt-m mr18'>
+					<div id='satellite-toggle' class='toggle-group txt-m mr18 bg-gray-faint'>
 					  <label class='toggle-container'>
 					    <input sat="landsat" checked name='toggle-sat' type='radio' />
-					    <div class='toggle'>Landsat</div>
+					    <div class='toggle color-gray-dark-on-hover'>Landsat</div>
 					  </label>
 					  <label class='toggle-container'>
 					    <input sat="sentinel" name='toggle-sat' type='radio' />
-					    <div class='toggle'>Sentinel</div>
+					    <div class='toggle color-gray-dark-on-hover'>Sentinel</div>
+					  </label>
+						<label class='toggle-container'>
+					    <input sat="cbers" name='toggle-sat' type='radio' />
+					    <div class='toggle color-gray-dark-on-hover'>CBERS</div>
 					  </label>
 					</div>
 				</div>
@@ -323,6 +333,7 @@
 
   <script type="text/javascript" src="/js/jquery-3.1.1.min.js"></script>
   <script type="text/javascript" src='https://npmcdn.com/@turf/turf@3.5.1/turf.min.js'></script>
+	<script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.3/moment.min.js'></script>
 	<script type="text/javascript" src="//cdn.jsdelivr.net/canvas-toblob/0.1/canvas-toBlob.min.js"></script>
 	<script type="text/javascript" src="//cdn.rawgit.com/eligrey/FileSaver.js/1.3.3/FileSaver.min.js"></script>
 	<script type="text/javascript" src="/js/app.js" charset="utf-8"></script>

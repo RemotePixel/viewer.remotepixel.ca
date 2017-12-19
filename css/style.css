@@ -158,7 +158,6 @@ ul.list-img li.list-element {
   cursor: pointer;
 }
 
-
 ul.list-img li.list-element  img {
     font-weight: 100;
     padding: 5px;
@@ -202,6 +201,11 @@ ul.list-img li.list-element  img {
   font-size: 14px;
   color: #fff;
   background-color: rgba(0, 0, 0, 0.77);
+  -webkit-touch-callout: default;
+    -webkit-user-select: text;
+       -moz-user-select: text;
+        -ms-user-select: text;
+            user-select: text;
 }
 
 .scenes-info span {
@@ -235,11 +239,11 @@ ul.list-img li.list-element  img {
 .errorMessage {
   position: absolute;
   bottom: 20px;
-  left: 20px;
+  left: 10px;
   color: #FFF;
   text-align: center;
   opacity: 1;
-  font-size: 25px;
+  font-size: 45px;
 }
 
 .errorMessage {
@@ -278,6 +282,18 @@ ul.list-img li.list-element  img {
   -moz-transition: all .5s ease;
   -ms-transition: all .5s ease;
   transition: all ease .5s;
+}
+
+#left {
+  -o-transition: all .5s ease;
+  -webkit-transition: all .5s ease;
+  -moz-transition: all .5s ease;
+  -ms-transition: all .5s ease;
+  transition: all ease .5s;
+}
+
+#left.off {
+  transform: rotate(180deg);
 }
 
 .middle-center {
@@ -432,10 +448,22 @@ ul {
   cursor: pointer;
 }
 
+.toggle-container {
+  line-height: 28px;
+}
+
 @media(max-width: 767px) {
 
+  .toggle-group {
+    display: block;
+    border-radius: 3px;
+  }
+  .toggle {
+    border-radius: 3px;
+  }
+
   #menu.off {
-    right: -246px;
+    left: -246px;
     -o-transition: all .5s ease;
     -webkit-transition: all .5s ease;
     -moz-transition: all .5s ease;
