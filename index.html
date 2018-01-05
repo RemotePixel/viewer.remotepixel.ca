@@ -22,8 +22,8 @@
 
 	<title>RemotePixel Viewer</title>
 
-	<script src='https://api.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.js'></script>
-	<link href='https://api.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css' rel='stylesheet' />
+	<script src='https://api.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.js'></script>
+	<link href='https://api.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.css' rel='stylesheet' />
 
 	<link href="https://api.mapbox.com/mapbox-assembly/v0.19.0/assembly.min.css" rel="stylesheet">
 	<script async defer src="https://api.mapbox.com/mapbox-assembly/v0.19.0/assembly.js"></script>
@@ -282,16 +282,21 @@
 					</div>
 				</div>
 
-				<div class="map-bottom-right z1">
-					<button id='btn-clear' class='shadow-darken10-bold-on-hover round none'>
+				<div class="map-bottom-right z1 bg-darken25">
+					<button id='btn-clear' class='shadow-darken10-bold-on-hover bg-gray-dark-on-hover round none'>
 						<svg class='icon icon--l'><use xlink:href='#icon-close'/></svg>
 					</button>
 
-					<button id="dl" class='shadow-darken10-bold-on-hover round none'>
+					<button id='btn-text' title='toggle place' class='shadow-darken10-bold-on-hover bg-gray-dark-on-hover round none'>
+						<svg class='icon icon--l'><use xlink:href='#icon-font'/></svg>
+					</button>
+
+
+					<button id="dl" class='shadow-darken10-bold-on-hover bg-gray-dark-on-hover round none'>
 						<svg class='icon icon--l'><use xlink:href='#icon-picture'/></svg>
 					</button>
 
-					<button id='btn-info' class='shadow-darken10-bold-on-hover round' onclick='showSiteInfo()'>
+					<button id='btn-info' class='shadow-darken10-bold-on-hover bg-gray-dark-on-hover round' onclick='showSiteInfo()'>
 						<svg class='icon icon--l'><use xlink:href='#icon-question'/></svg>
 					</button>
 				</div>
