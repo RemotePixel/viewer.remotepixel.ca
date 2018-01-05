@@ -1,13 +1,13 @@
 "use strict";
 
-// mapboxgl.accessToken = '';
-//
-// const landsat_tiler_url = '';
-// const sentinel_tiler_url = '';
-// const cbers_tiler_url = '';
+mapboxgl.accessToken = '';
 
-// const access_token = '';
-// const sat_api = 'https://search.remotepixel.ca';
+const landsat_tiler_url = '';
+const sentinel_tiler_url = '';
+const cbers_tiler_url = '';
+
+const access_token = '';
+const sat_api = 'https://search.remotepixel.ca';
 
 let scope = {};
 const config = {
