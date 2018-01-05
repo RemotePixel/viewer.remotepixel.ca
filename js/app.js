@@ -1,17 +1,18 @@
 "use strict";
 
-mapboxgl.accessToken = '';
+// mapboxgl.accessToken = '';
+//
+// const landsat_tiler_url = '';
+// const sentinel_tiler_url = '';
+// const cbers_tiler_url = '';
 
-const landsat_tiler_url = '';
-const sentinel_tiler_url = '';
-const cbers_tiler_url = '';
-
-const sat_api = 'https://search.remotepixel.ca';
+// const access_token = '';
+// const sat_api = 'https://search.remotepixel.ca';
 
 let scope = {};
-
 const config = {
-  tile: 256
+  tile: 256,
+  access_token: access_token
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,8 +115,8 @@ const buildQueryAndRequestL8 = (features) => {
   $(".metaloader").removeClass('off');
   $('#nodata-error').addClass('none');
 
-  if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
   if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+  if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
 
   let res = {};
 
@@ -197,8 +198,8 @@ const buildQueryAndRequestS2 = (features) => {
   $('#nodata-error').addClass('none');
   $(".metaloader").removeClass('off');
 
-  if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
   if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+  if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
 
   const results = [];
 
@@ -266,8 +267,8 @@ const buildQueryAndRequestCBERS = (features) => {
   $(".metaloader").removeClass('off');
   $('#nodata-error').addClass('none');
 
-  if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
   if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+  if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
 
   const results = [];
 
@@ -403,8 +404,8 @@ const initSceneL8 = (sceneID, sceneDate) => {
     })
     .catch(err => {
       console.warn(err);
-      if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
       if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+      if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
       $('.errorMessage').removeClass('none');
       $(".scenes-info span").text('');
       $(".scenes-info").addClass('none');
@@ -441,8 +442,8 @@ const initSceneS2 = (sceneID, sceneDate) => {
     })
     .catch(err => {
       console.warn(err.responseJSON);
-      if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
       if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+      if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
       $('.errorMessage').removeClass('none');
       $(".scenes-info span").text('');
       $(".scenes-info").addClass('none');
@@ -472,14 +473,12 @@ const initSceneCBERS = (sceneID, sceneDate) => {
       $(".scenes-info .id").text(sceneID);
       $(".scenes-info .date").text(sceneDate);
       $(".scenes-info .url").html(`<a href=${AWSurl} target="_blanck">link</a>`);
-
-      $('#dl').removeClass('none');
       $('.errorMessage').addClass('none');
     })
     .catch(err => {
       console.warn(err);
-      if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
       if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
+      if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
       $('.errorMessage').removeClass('none');
       $(".scenes-info span").text('');
       $(".scenes-info").addClass('none');
@@ -493,6 +492,8 @@ const initSceneCBERS = (sceneID, sceneDate) => {
 const updateRasterTile = () => {
   if (map.getLayer('raster-tiles')) map.removeLayer('raster-tiles');
   if (map.getSource('raster-tiles')) map.removeSource('raster-tiles');
+  $('#btn-text').addClass('none');
+  $('#dl').addClass('none');
 
   const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
   const meta = scope.imgMetadata;
@@ -502,8 +503,6 @@ const updateRasterTile = () => {
   let histo_cuts;
   let endpoint;
   let url;
-
-  let params = config;
 
   switch(sat) {
     case 'landsat':
@@ -524,6 +523,11 @@ const updateRasterTile = () => {
     default:
       throw new Error(`Invalid ${source_id}`);
   }
+
+  let params = {
+    'tile': config.tile,
+    'access_token': config.access_token
+  };
 
   // RGB
   if ($('#rgb').hasClass('active')) {
@@ -550,8 +554,6 @@ const updateRasterTile = () => {
 
   const url_params = Object.keys(params).map(i => `${i}=${params[i]}`).join('&');
 
-  $(".scenes-info .rgb").text(rgb);
-
   // NOTE: Calling 512x512px tiles is a bit longer but gives a
   // better quality image and reduce the number of tiles requested
 
@@ -573,13 +575,27 @@ const updateRasterTile = () => {
     'id': 'raster-tiles',
     'type': 'raster',
     'source': 'raster-tiles'
-  });
+  }, 'airport-label');
+
+  map.getLayer('raster-tiles').top = true;
+
+  $('#btn-text').removeClass('none');
+  $('#dl').removeClass('none');
 
   const extent = scope.imgMetadata.bounds;
   const llb = mapboxgl.LngLatBounds.convert([[extent[0],extent[1]], [extent[2],extent[3]]]);
   if (map.getZoom() <= 6) map.fitBounds(llb, {padding: 50});
-};
 
+  let historyParams = {
+    sceneid: meta.sceneid,
+    pmin: $("#minCount").val(),
+    pmax: $("#maxCount").val()
+  }
+  if (params.rgb) historyParams.rgb = params.rgb;
+  if (params.ratio) historyParams.ratio = params.ratio;
+  if (params.tile) historyParams.tile = params.tile;
+  updateHistory(historyParams);
+};
 
 const updateMetadata = () => {
   if (!map.getSource('raster-tiles')) return;
@@ -614,6 +630,7 @@ const reset = () => {
   $(".scenes-info span").text('');
   $(".scenes-info").addClass('none');
   $('#btn-clear').addClass('none');
+  $('#btn-text').addClass('none')
   $('#dl').addClass('none');
 
   scope = {};
@@ -626,6 +643,7 @@ const reset = () => {
   map.resize();
 
   $('.errorMessage').addClass('none');
+  updateHistory({});
 };
 
 const switchPane = (event) => {
@@ -682,6 +700,19 @@ const updateBands = (e) => {
 
 document.getElementById("btn-clear").onclick = () => { reset(); };
 
+document.getElementById("btn-text").onclick = () => {
+  if (!map.getLayer('raster-tiles')) return;
+
+  if (map.getLayer('raster-tiles').top === true) {
+    map.moveLayer('raster-tiles');
+    map.getLayer('raster-tiles').top = false;
+  } else {
+    map.moveLayer('raster-tiles', 'airport-label');
+    map.getLayer('raster-tiles').top = true;
+  }
+};
+
+
 document.getElementById('dl').addEventListener('click', () => {
   map.getCanvas().toBlob(function(blob) {
     const imgName = `${scope.imgMetadata.sceneid}.png`
@@ -691,7 +722,6 @@ document.getElementById('dl').addEventListener('click', () => {
 
 document.getElementById('btn-hide').addEventListener('click', () => {
   $('#left').toggleClass('off');
-  // $('#right').toggleClass('none');
   $('#menu').toggleClass('off');
 });
 
@@ -749,12 +779,23 @@ const updateSat = () => {
 
 const updateRGB = (rgb) => {
   rgb = rgb.split(',');
-  document.getElementById('r').value = rgb[0];
-  document.getElementById('g').value = rgb[1];
-  document.getElementById('b').value = rgb[2];
-  $('#rgb-selection option[value="custom"]').attr('selected', 'selected');
-  $('#rgb-buttons select').prop('disabled', false);
-}
+  if (rgb.length === 1) {
+    updateBands($(`#band-buttons [value="${rgb[0]}"]`));
+    switchPane({id: 'band'});
+  } else {
+    document.getElementById('r').value = rgb[0];
+    document.getElementById('g').value = rgb[1];
+    document.getElementById('b').value = rgb[2];
+    $('#rgb-selection').val("custom").change();
+    $('#rgb-buttons select').prop('disabled', false);
+    switchPane({id: 'rgb'});
+  }
+};
+
+const updateRatio = (ratio) => {
+  $('#ratio-selection').val(ratio).change();
+  switchPane({id: 'process'});
+};
 
 const landsatUI = () => {
   $('#rgb-selection').empty();
@@ -904,6 +945,13 @@ const cbersUI = () => {
 
 document.getElementById('satellite-toggle').addEventListener('change', updateSat);
 
+const updateHistory = (params) => {
+  const url_params = Object.keys(params).map(i => `${i}=${params[i]}`).join('&');
+  const newUrl = `${window.location.origin}/?${url_params}${window.location.hash}`;
+  window.history.replaceState({} , '', newUrl);
+  return;
+};
+
 var map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/satellite-streets-v9',
@@ -911,6 +959,7 @@ var map = new mapboxgl.Map({
   zoom: 3,
   attributionControl: true,
   preserveDrawingBuffer: true,
+  hash: true,
   minZoom: 3,
   maxZoom: 15
 });
@@ -924,7 +973,6 @@ map.on('click', (e) => {
   const features = getFeatures(e);
   if (features.length !== 0) {
     let pr;
-    console.log(features);
     const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
     switch(sat) {
       case 'landsat':
@@ -995,7 +1043,7 @@ const addLayers = (source_id) => {
           },
           'fill-opacity': 1
       }
-  });
+  }, 'admin-2-boundaries-bg');
 
   map.addLayer({
       'id': 'Highlighted',
@@ -1008,7 +1056,7 @@ const addLayers = (source_id) => {
           'fill-opacity': 0.3
       },
       'filter': ['in', 'PATH', '']
-  });
+  }, 'admin-2-boundaries-bg');
 
   map.addLayer({
       'id': 'Selected',
@@ -1020,7 +1068,7 @@ const addLayers = (source_id) => {
           'line-width': 3
       },
       'filter': ['in', 'PATH', '']
-  });
+  }, 'admin-2-boundaries-bg');
 }
 
 map.on('load', () => {
@@ -1041,6 +1089,8 @@ map.on('load', () => {
 
   const params = parseParams(window.location.search)
   if (params.tile) config.tile = params.tile;
+  if (params.pmin) $("#minCount").val(params.pmin);
+  if (params.pmax) $("#maxCount").val(params.pmax);
 
   if (params.sceneid) {
     showSiteInfo();
@@ -1049,18 +1099,21 @@ map.on('load', () => {
     let date = ''
     if (/^L[COTEM]08_/.exec(sceneid)) {
         if (params.rgb) updateRGB(params.rgb);
+        if (params.ratio) updateRatio(params.ratio);
         scene_info = parseSceneid_c1(sceneid);
         date = sceneid.split('_')[3];
         date = `${date.slice(0,4)}${date.slice(4,6)}${date.slice(6,8)}`;
         initSceneL8(sceneid, date);
     } else if (/^L[COTEM]8/.exec(sceneid)) {
         if (params.rgb) updateRGB(params.rgb);
+        if (params.ratio) updateRatio(params.ratio);
         scene_info = parseSceneid_pre(sceneid);
         initSceneL8(sceneid, date);
     } else if (/^S2/.exec(sceneid)) {
         $(".map-top-right .toggle-group input[sat='sentinel']").prop('checked', true);
         updateSat();
         if (params.rgb) updateRGB(params.rgb);
+        if (params.ratio) updateRatio(params.ratio);
         date = sceneid.split('_')[2];
         date = `${date.slice(0,4)}${date.slice(4,6)}${date.slice(6,8)}`;
         initSceneS2(sceneid, date);
@@ -1068,6 +1121,7 @@ map.on('load', () => {
       $(".map-top-right .toggle-group input[sat='cbers']").prop('checked', true);
       updateSat();
       if (params.rgb) updateRGB(params.rgb);
+      if (params.ratio) updateRatio(params.ratio);
       scene_info = parseCBERSid(sceneid);
       initSceneCBERS(sceneid, scene_info.acquisition_date);
     } else {

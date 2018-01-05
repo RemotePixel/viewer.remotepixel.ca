@@ -318,15 +318,15 @@ ul.list-img li.list-element  img {
 .map-bottom-right {
   position: absolute;
   display: block;
-  bottom: 20px;
+  bottom: 25px;
   right: 5px;
+  border-radius: 5px;
 }
 
 .map-bottom-right  a,
 .map-bottom-right  button {
   display: block;
   padding: 3px;
-  margin-bottom: 5px;
   font-size: 30px;
   color: #FFF;
 }
