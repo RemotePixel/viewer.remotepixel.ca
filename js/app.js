@@ -1,5 +1,6 @@
 "use strict";
 
+
 mapboxgl.accessToken = '';
 
 const landsat_tiler_url = '';
@@ -36,7 +37,7 @@ const parseParams = (w_loc) => {
 };
 
 const sortScenes = (a, b) => {
-  return Date.parse(b.date) - Date.parse(a.date);
+  return moment(b.date, 'YYYYMMDD') - moment(a.date, 'YYYYMMDD');
 };
 
 const parseSceneid_c1 = (sceneid) => {
@@ -1102,7 +1103,6 @@ map.on('load', () => {
         if (params.ratio) updateRatio(params.ratio);
         scene_info = parseSceneid_c1(sceneid);
         date = sceneid.split('_')[3];
-        date = `${date.slice(0,4)}${date.slice(4,6)}${date.slice(6,8)}`;
         initSceneL8(sceneid, date);
     } else if (/^L[COTEM]8/.exec(sceneid)) {
         if (params.rgb) updateRGB(params.rgb);
@@ -1115,7 +1115,6 @@ map.on('load', () => {
         if (params.rgb) updateRGB(params.rgb);
         if (params.ratio) updateRatio(params.ratio);
         date = sceneid.split('_')[2];
-        date = `${date.slice(0,4)}${date.slice(4,6)}${date.slice(6,8)}`;
         initSceneS2(sceneid, date);
     } else if  (/^CBERS/.exec(sceneid)) {
       $(".map-top-right .toggle-group input[sat='cbers']").prop('checked', true);
