@@ -1,14 +1,12 @@
 "use strict";
 
-
 mapboxgl.accessToken = '';
 
-const landsat_tiler_url = '';
-const sentinel_tiler_url = '';
-const cbers_tiler_url = '';
+const landsat_services = '';
+const sentinel_services = '';
+const cbers_services  = '';
 
 const access_token = '';
-const sat_api = 'https://search.remotepixel.ca';
 
 let scope = {};
 const config = {
@@ -124,7 +122,7 @@ const buildQueryAndRequestL8 = (features) => {
   Promise.all(features.map(e => {
     const row = zeroPad(e.properties.ROW, 3);
     const path = zeroPad(e.properties.PATH, 3);
-    const query = `${sat_api}/landsat?row=${row}&path=${path}&full=true`;
+    const query = `${landsat_services}/search?row=${row}&path=${path}&full=true`;
 
     return $.getJSON(query).done()
       .then(data => {
@@ -148,7 +146,7 @@ const buildQueryAndRequestL8 = (features) => {
         scene.browseURL = data[i].browseURL;
         scene.thumbURL = data[i].thumbURL;
         scene.scene_id = data[i].scene_id;
-        scene.type = data[i].type;
+        scene.type = data[i].category;
         res[scene.scene_id] = scene;
       }
 
@@ -208,7 +206,9 @@ const buildQueryAndRequestS2 = (features) => {
     const utm = e.properties.Name.slice(0, 2);
     const lat = e.properties.Name.slice(2, 3);
     const grid = e.properties.Name.slice(3, 5);
-    const query = `${sat_api}/sentinel?utm=${utm}&grid=${grid}&lat=${lat}&full=true`;
+
+    const level = 'l1c';
+    const query = `${sentinel_services}/s2/search?utm=${utm}&grid=${grid}&lat=${lat}&full=true&level=${level}`;
 
     return $.getJSON(query).done()
       .then(data => {
@@ -276,7 +276,7 @@ const buildQueryAndRequestCBERS = (features) => {
   Promise.all(features.map(e => {
     const row = zeroPad(e.properties.ROW, 3);
     const path = zeroPad(e.properties.PATH, 3);
-    const query = `${sat_api}/cbers?row=${row}&path=${path}`;
+    const query = `${cbers_services}/search?row=${row}&path=${path}`;
 
     return $.getJSON(query).done()
       .then(data => {
@@ -296,7 +296,7 @@ const buildQueryAndRequestCBERS = (features) => {
         scene.path = data[i].path;
         scene.row = data[i].row;
         scene.date = data[i].acquisition_date;
-        scene.browseURL = data[i].browseURL;
+        scene.thumbURL = data[i].thumbURL;
         scene.scene_id = data[i].scene_id;
         scene.type = data[i].processing_level;
         results.push(scene);
@@ -306,7 +306,7 @@ const buildQueryAndRequestCBERS = (features) => {
       for (let i = 0; i < results.length; i += 1) {
         $('.list-img').append(
           `<li data-row="${results[i].row}" data-path="${results[i].path}" data-type="${results[i].type}" data-date="${results[i].date}" class="list-element" onclick="initSceneCBERS('${results[i].scene_id}','${results[i].date}')" onmouseover="overImageCBERS(this)" onmouseout="outImage()">` +
-            `<img class="img-item" src="${results[i].browseURL}">` +
+            `<img class="img-item" src="${results[i].thumbURL}">` +
           '</li>'
         );
       }
@@ -380,7 +380,7 @@ const initSceneL8 = (sceneID, sceneDate) => {
 
   let min = $("#minCount").val();
   let max = $("#maxCount").val();
-  const query = `${landsat_tiler_url}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
+  const query = `${landsat_services}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
 
   $.getJSON(query).done()
     .then(data => {
@@ -423,7 +423,7 @@ const initSceneS2 = (sceneID, sceneDate) => {
 
   let min = $("#minCount").val();
   let max = $("#maxCount").val();
-  const query = `${sentinel_tiler_url}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
+  const query = `${sentinel_services}/s2/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
 
   $.getJSON(query).done()
     .then(data => {
@@ -462,7 +462,7 @@ const initSceneCBERS = (sceneID, sceneDate) => {
 
   let min = $("#minCount").val();
   let max = $("#maxCount").val();
-  const query = `${cbers_tiler_url}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
+  const query = `${cbers_services}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
 
   $.getJSON(query).done()
     .then(data => {
@@ -507,17 +507,17 @@ const updateRasterTile = () => {
 
   switch(sat) {
     case 'landsat':
-      endpoint = landsat_tiler_url;
+      endpoint = landsat_services;
       attrib = '<a href="https://landsat.usgs.gov/landsat-8"> &copy; USGS/NASA Landsat</a>';
       maxzoom = 14;
       break;
     case 'sentinel':
-      endpoint = sentinel_tiler_url;
+      endpoint = `${sentinel_services}/s2`;
       attrib = '<span> &copy; Copernicus / ESA 2017</span>';
       maxzoom = 15;
       break;
     case 'cbers':
-      endpoint = cbers_tiler_url;
+      endpoint = cbers_services;
       attrib = '<a href=""> &copy; CBERS</a>';
       maxzoom = 15;
       break;
@@ -576,9 +576,9 @@ const updateRasterTile = () => {
     'id': 'raster-tiles',
     'type': 'raster',
     'source': 'raster-tiles'
-  }, 'airport-label');
+  });
 
-  map.getLayer('raster-tiles').top = true;
+  map.getLayer('raster-tiles').top = false;
 
   $('#btn-text').removeClass('none');
   $('#dl').removeClass('none');
