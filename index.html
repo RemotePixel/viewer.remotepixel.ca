@@ -25,8 +25,8 @@
 	<script src='https://api.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.js'></script>
 	<link href='https://api.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.css' rel='stylesheet' />
 
-	<link href="https://api.mapbox.com/mapbox-assembly/v0.19.0/assembly.min.css" rel="stylesheet">
-	<script async defer src="https://api.mapbox.com/mapbox-assembly/v0.19.0/assembly.js"></script>
+	<link href="https://api.mapbox.com/mapbox-assembly/v0.20.0/assembly.min.css" rel="stylesheet">
+	<script async defer src="https://api.mapbox.com/mapbox-assembly/v0.20.0/assembly.js"></script>
 
   <link href="/css/style.css" rel="stylesheet">
 
@@ -239,10 +239,10 @@
 							<div class='txt-h5 mb12 color-black'>Band ratios</div>
 							<div class='select-container w-full'>
 								<select id='ratio-selection' class='select select--s select--stroke  w-full color-black'>
-									<option value="ndvi">NDVI</option>
-									<option value="ndsi">NDSI</option>
-									<option value="ndwi">NDWI</option>
-									<option value="ac-index">AC-Index</option>
+									<option value="(b5-b4)/(b5+b4)" name="ndvi">NDVI</option>
+									<option value="(b2-b5)/(b2+b5)" name="ndsi">NDSI</option>
+									<option value="(b5-b6)/(b5+b6)" name="ndwi">NDWI</option>
+									<option value="(b1-b2)/(b1+b2)" name="ac-index">AC-Index</option>
 								</select>
 								<div class='select-arrow color-black'></div>
 							</div>

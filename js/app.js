@@ -550,7 +550,7 @@ const updateRasterTile = () => {
   // PROCESSING
   } else if ($('#process').hasClass('active')) {
     url = `${endpoint}/processing/${meta.sceneid}/{z}/{x}/{y}.png`;
-    params.ratio = document.getElementById('ratio-selection').value;
+    params.ratio = encodeURIComponent(document.getElementById('ratio-selection').value);
   }
 
   const url_params = Object.keys(params).map(i => `${i}=${params[i]}`).join('&');
@@ -794,7 +794,9 @@ const updateRGB = (rgb) => {
 };
 
 const updateRatio = (ratio) => {
-  $('#ratio-selection').val(ratio).change();
+  var decode_ratio = decodeURIComponent(ratio);
+  $(`#ratio-selection option[equation='${decode_ratio}']`).prop('selected', true);
+  $('#ratio-selection').change();
   switchPane({id: 'process'});
 };
 
@@ -848,10 +850,10 @@ const landsatUI = () => {
 
   $('#ratio-selection').empty();
   $('#ratio-selection').append(
-    '<option value="ndvi">NDVI</option>' +
-    '<option value="ndsi">NDSI</option>' +
-    '<option value="ndwi">NDWI</option>' +
-    '<option value="ac-index">AC-Index</option>');
+    '<option value="(b5-b4)/(b5+b4)" name="ndvi">NDVI</option>' +
+    '<option value="(b2-b5)/(b2+b5)" name="ndsi">NDSI</option>' +
+    '<option value="(b5-b6)/(b5+b6)" name="ndwi">NDWI</option>' +
+    '<option value="(b1-b2)/(b1+b2)" name="ac-index">AC-Index</option>');
 };
 
 
@@ -908,8 +910,8 @@ const sentinelUI = () => {
 
     $('#ratio-selection').empty();
     $('#ratio-selection').append(
-      '<option value="ndvi">NDVI</option>' +
-      '<option value="ndsi">NDSI</option>');
+      '<option value="(b08-b04)/(b08+b04)" name="ndvi">NDVI</option>' +
+      '<option value="(b02-b08)/(b02+b08)" name="ndsi">NDSI</option>');
 };
 
 
@@ -941,7 +943,7 @@ const cbersUI = () => {
     '<button onclick="updateBands(this)" value="8" class="btn btn--stroke btn--stroke--2 mx6 my6 txt-m">8</button>');
 
     $('#ratio-selection').empty();
-    $('#ratio-selection').append('<option value="ndvi">NDVI</option>');
+    $('#ratio-selection').append('<option value="(b8-b7)/(b8+b7)" name="ndvi">NDVI</option>');
 };
 
 document.getElementById('satellite-toggle').addEventListener('change', updateSat);
