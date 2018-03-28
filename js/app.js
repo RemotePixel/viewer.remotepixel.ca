@@ -9,10 +9,6 @@ const cbers_services  = '';
 const access_token = '';
 
 let scope = {};
-const config = {
-  tile: 256,
-  access_token: access_token
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 //From Libra by developmentseed (https://github.com/developmentseed/libra)
@@ -380,7 +376,7 @@ const initSceneL8 = (sceneID, sceneDate) => {
 
   let min = $("#minCount").val();
   let max = $("#maxCount").val();
-  const query = `${landsat_services}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
+  const query = `${landsat_services}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${access_token}`;
 
   $.getJSON(query).done()
     .then(data => {
@@ -423,7 +419,7 @@ const initSceneS2 = (sceneID, sceneDate) => {
 
   let min = $("#minCount").val();
   let max = $("#maxCount").val();
-  const query = `${sentinel_services}/s2/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
+  const query = `${sentinel_services}/s2/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${access_token}`;
 
   $.getJSON(query).done()
     .then(data => {
@@ -462,7 +458,7 @@ const initSceneCBERS = (sceneID, sceneDate) => {
 
   let min = $("#minCount").val();
   let max = $("#maxCount").val();
-  const query = `${cbers_services}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${config.access_token}`;
+  const query = `${cbers_services}/metadata/${sceneID}?'pmim=${min}&pmax=${max}&access_token=${access_token}`;
 
   $.getJSON(query).done()
     .then(data => {
@@ -497,6 +493,10 @@ const updateRasterTile = () => {
   $('#dl').addClass('none');
 
   const sat = $(".map-top-right .toggle-group input:checked")[0].getAttribute('sat');
+  const raster_size = parseInt($("#rsize-toggle input:checked")[0].getAttribute('rSize'));
+  const gl_size = parseInt($("#glsize-toggle input:checked")[0].getAttribute('glSize'));
+  const tile_format = $("#format-toggle input:checked")[0].getAttribute('format');
+
   const meta = scope.imgMetadata;
   let attrib;
   let maxzoom;
@@ -526,8 +526,8 @@ const updateRasterTile = () => {
   }
 
   let params = {
-    'tile': config.tile,
-    'access_token': config.access_token
+    'tile': raster_size,
+    'access_token': access_token
   };
 
   // RGB
@@ -538,18 +538,18 @@ const updateRasterTile = () => {
     params.rgb = [r, g, b].join(',');
     params.histo = `${meta.rgbMinMax[r]}-${meta.rgbMinMax[g]}-${meta.rgbMinMax[b]}`;
     if (rgb == '4,3,2' && sat === 'landsat') params.pan = 'True';
-    url = `${endpoint}/tiles/${meta.sceneid}/{z}/{x}/{y}.png`;
+    url = `${endpoint}/tiles/${meta.sceneid}/{z}/{x}/{y}.${tile_format}`;
 
   // BAND
   } else if ($('#band').hasClass('active')) {
     const band = $('#band-buttons button.active')[0].getAttribute('value');
     params.rgb = band;
     params.histo = `${meta.rgbMinMax[band]}`;
-    url = `${endpoint}/tiles/${meta.sceneid}/{z}/{x}/{y}.png`;
+    url = `${endpoint}/tiles/${meta.sceneid}/{z}/{x}/{y}.${tile_format}`;
 
   // PROCESSING
   } else if ($('#process').hasClass('active')) {
-    url = `${endpoint}/processing/${meta.sceneid}/{z}/{x}/{y}.png`;
+    url = `${endpoint}/processing/${meta.sceneid}/{z}/{x}/{y}.${tile_format}`;
     params.ratio = encodeURIComponent(document.getElementById('ratio-selection').value);
   }
 
@@ -569,7 +569,7 @@ const updateRasterTile = () => {
     bounds: scope.imgMetadata.bounds,
     minzoom: 7,
     maxzoom: maxzoom,
-    tileSize: 512
+    tileSize: gl_size
   });
 
   map.addLayer({
@@ -588,13 +588,15 @@ const updateRasterTile = () => {
   if (map.getZoom() <= 6) map.fitBounds(llb, {padding: 50});
 
   let historyParams = {
+    gl_size: gl_size,
+    raster_size: raster_size,
+    format: tile_format,
     sceneid: meta.sceneid,
     pmin: $("#minCount").val(),
     pmax: $("#maxCount").val()
   }
   if (params.rgb) historyParams.rgb = params.rgb;
   if (params.ratio) historyParams.ratio = params.ratio;
-  if (params.tile) historyParams.tile = params.tile;
   updateHistory(historyParams);
 };
 
@@ -653,10 +655,11 @@ const switchPane = (event) => {
   $(`#toolbar #${event.id}`).addClass('active');
   $(`#menu-content #${event.id}`).addClass('active');
 
-  if (event.id === 'process') {
+  if (event.id === 'process'){
     $('#params').addClass('none');
   } else $('#params').removeClass('none');
 
+  if (event.id === 'config') return;
   if (map.getSource('raster-tiles')) updateRasterTile();
 };
 
@@ -691,6 +694,12 @@ document.getElementById("b").addEventListener("change", () => {
 
 document.getElementById("ratio-selection").addEventListener("change", () => {
   if (map.getSource('raster-tiles')) updateRasterTile();
+});
+
+document.getElementById("opacity-range").addEventListener("change", () => {
+    if (!map.getSource('raster-tiles')) return;
+    const value = document.getElementById('opacity-value').value;
+    map.setPaintProperty('raster-tiles', 'raster-opacity', parseInt(value) / 100);
 });
 
 const updateBands = (e) => {
@@ -947,6 +956,9 @@ const cbersUI = () => {
 };
 
 document.getElementById('satellite-toggle').addEventListener('change', updateSat);
+document.getElementById('format-toggle').addEventListener('change', updateRasterTile);
+document.getElementById('rsize-toggle').addEventListener('change', updateRasterTile);
+document.getElementById('glsize-toggle').addEventListener('change', updateRasterTile);
 
 const updateHistory = (params) => {
   const url_params = Object.keys(params).map(i => `${i}=${params[i]}`).join('&');
@@ -968,6 +980,7 @@ var map = new mapboxgl.Map({
 });
 
 map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+map.addControl(new mapboxgl.ScaleControl({maxWidth: 100,   unit: 'metric'}), 'bottom-right');
 
 map.on('mousemove', (e) => {getFeatures(e);});
 
@@ -1091,7 +1104,25 @@ map.on('load', () => {
   $('.loading-map').addClass('off');
 
   const params = parseParams(window.location.search)
-  if (params.tile) config.tile = params.tile;
+
+  if (params.raster_size) {
+    let rSize = parseInt(params.raster_size);
+    if ([128, 256, 512].indexOf(rSize) === -1) rSize = 256;
+    $(`#rsize-toggle input[rSize="${rSize}"]`).prop('checked', true);
+  }
+
+  if (params.gl_size) {
+    let glSize = parseInt(params.gl_size);
+    if ([128, 256, 512].indexOf(glSize) === -1) glSize = 256;
+    $(`#glsize-toggle input[glSize="${glSize}"]`).prop('checked', true);
+  }
+
+  if (params.format) {
+    let format = params.format;
+    if (['png', 'jpeg', 'webp'].indexOf(format) === -1) format = 'jpg';
+    $(`#format-toggle input[format="${format}"]`).prop('checked', true);
+  }
+
   if (params.pmin) $("#minCount").val(params.pmin);
   if (params.pmax) $("#maxCount").val(params.pmax);
 

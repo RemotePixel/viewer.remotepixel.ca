@@ -318,8 +318,8 @@ ul.list-img li.list-element  img {
 .map-bottom-right {
   position: absolute;
   display: block;
-  bottom: 25px;
-  right: 5px;
+  bottom: 60px;
+  right: 10px;
   border-radius: 5px;
 }
 
