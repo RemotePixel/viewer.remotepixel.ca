@@ -804,7 +804,7 @@ const updateRGB = (rgb) => {
 
 const updateRatio = (ratio) => {
   var decode_ratio = decodeURIComponent(ratio);
-  $(`#ratio-selection option[equation='${decode_ratio}']`).prop('selected', true);
+  $(`#ratio-selection option[value='${decode_ratio}']`).prop('selected', true);
   $('#ratio-selection').change();
   switchPane({id: 'process'});
 };
@@ -861,10 +861,10 @@ const landsatUI = () => {
   $('#ratio-selection').append(
     '<option value="(b5-b4)/(b5+b4)" name="ndvi">NDVI</option>' +
     '<option value="(b2-b5)/(b2+b5)" name="ndsi">NDSI</option>' +
-    '<option value="(b5-b6)/(b5+b6)" name="ndwi">NDWI</option>' +
+    '<option value="(b5-b6)/(b5+b6)" name="ndwi">NDWI (Gao)</option>' +
+    '<option value="(b3-b5)/(b3+b5)" name="ndwi2">NDWI (McFeeters)</option>' +
     '<option value="(b1-b2)/(b1+b2)" name="ac-index">AC-Index</option>');
 };
-
 
 const sentinelUI = () => {
   $('#rgb-selection').empty();
@@ -920,9 +920,10 @@ const sentinelUI = () => {
     $('#ratio-selection').empty();
     $('#ratio-selection').append(
       '<option value="(b08-b04)/(b08+b04)" name="ndvi">NDVI</option>' +
-      '<option value="(b02-b08)/(b02+b08)" name="ndsi">NDSI</option>');
+      '<option value="(b02-b08)/(b02+b08)" name="ndsi">NDSI</option>' +
+      '<option value="(b8A-b12)/(b8A+b12)" name="ndwi">NDWI (Gao)</option>' +
+      '<option value="(b03-b8A)/(b03+b8A)" name="ndwi2">NDWI (McFeeters)</option>');
 };
-
 
 const cbersUI = () => {
   $('#rgb-selection').empty();
