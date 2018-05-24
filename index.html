@@ -278,14 +278,8 @@
 								</label>
 							</div>
 
-							<div class='txt-s mt6 color-black'>Opacity</div>
-							<div id='opacity-range' class='range range--blue mr36'>
-								<input id='opacity-value' type='range' min="0" max="100" step="1" value="100"/>
-							</div>
-
-
 							<div class='txt-s mt6 color-black none'>Raster Tile size</div>
-							<div id='rsize-toggle' class='toggle-group txt-xs mr18 bg-gray-faint  none'>
+							<div id='rsize-toggle' class='toggle-group txt-xs mr18 bg-gray-faint none'>
 								<label class='toggle-container'>
 									<input rSize="128" name='toggle-rsize' type='radio' />
 									<div class='toggle color-gray-dark-on-hover'>128</div>
@@ -300,7 +294,7 @@
 								</label>
 							</div>
 
-							<div class='txt-s mt6 color-black  none'>GL Tile size</div>
+							<div class='txt-s mt6 color-black none'>GL Tile size</div>
 							<div id='glsize-toggle' class='toggle-group txt-xs mr18 bg-gray-faint none'>
 								<label class='toggle-container'>
 									<input glSize="128" name='toggle-glsize' type='radio' />
@@ -315,9 +309,31 @@
 									<div class='toggle color-gray-dark-on-hover'>512</div>
 								</label>
 							</div>
+
+							<div class='txt-s mt6 color-black'>Opacity</div>
+							<div id='opacity-range' class='range range--blue mr36'>
+								<input id='opacity-value' type='range' min="0" max="100" step="1" value="100"/>
+							</div>
+
+
+							<div class='txt-s mt6 color-black'>Basemap</div>
+
+							<div class='select-container w-full'>
+								<select id='basemap-selection' class='select select--s select--stroke  w-full color-black'>
+									<option value='mapbox.satellite' name="mapbox">mapbox</option>
+									<option value='VIIRS_SNPP_CorrectedReflectance_TrueColor' name="suomi_true">SUOMI NPP True Color</option>
+									<option value='MODIS_Terra_CorrectedReflectance_TrueColor' name="terra_true">MODIS Terra True Color</option>
+									<option value='MODIS_Aqua_CorrectedReflectance_TrueColor' name="aqua_true">MODIS Aqua True Color</option>
+									<option value='VIIRS_SNPP_CorrectedReflectance_BandsM11-I2-I1' name="suomi_false">SUOMI NPP Bands M11-I2-I1</option>
+									<option value='MODIS_Terra_CorrectedReflectance_Bands721' name="terra_false">MODIS Terra Bands 7-2-1</option>
+									<option value='MODIS_Aqua_CorrectedReflectance_Bands721' name="aqua_false">MODIS Aqua Bands 7-2-1</option>
+									<option value='VIIRS_SNPP_CorrectedReflectance_BandsM3-I3-M11' name="suomi_false2">SUOMI NPP Bands M3-I3-I11</option>
+									<option value='MODIS_Terra_CorrectedReflectance_Bands367' name="terra_false">MODIS Terra Bands 3-6-7'</option>
+								</select>
+								<div class='select-arrow color-black'></div>
+							</div>
+
 						</div>
-
-
 					</div>
 
 					<button id='btn-hide'>

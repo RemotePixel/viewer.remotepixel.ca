@@ -717,11 +717,10 @@ document.getElementById("btn-text").onclick = () => {
     map.moveLayer('raster-tiles');
     map.getLayer('raster-tiles').top = false;
   } else {
-    map.moveLayer('raster-tiles', 'airport-label');
+    map.moveLayer('raster-tiles', 'places');
     map.getLayer('raster-tiles').top = true;
   }
 };
-
 
 document.getElementById('dl').addEventListener('click', () => {
   map.getCanvas().toBlob(function(blob) {
@@ -734,6 +733,53 @@ document.getElementById('btn-hide').addEventListener('click', () => {
   $('#left').toggleClass('off');
   $('#menu').toggleClass('off');
 });
+
+
+document.getElementById("basemap-selection").addEventListener("change", (e) => {
+  if (map.getLayer('basemap')) map.removeLayer('basemap');
+  if (map.getSource('basemap')) map.removeSource('basemap');
+
+  let basemap = e.target.value;
+
+  switch (basemap) {
+  case 'mapbox.satellite':
+      map.addSource('basemap', {
+        'type': 'raster',
+        'url': 'mapbox://mapbox.satellite'
+      });
+
+      map.addLayer({
+        'type': 'raster',
+        'paint': {},
+        'layout': {'visibility':'visible'},
+        'id': 'basemap',
+        'source': 'basemap'
+      }, 'Grid');
+      return;
+  default:
+      const dateValue = moment().utc().subtract(1, 'day').format('YYYY-MM-DD')
+      const basemaps_url = `https://map1.vis.earthdata.nasa.gov/wmts-webmerc/${basemap}/default/${dateValue}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
+      const attrib = '<a href="https://earthdata.nasa.gov/about/science-system-description/eosdis-components/global-imagery-browse-services-gibs"> NASA EOSDIS GIBS</a>';
+
+      map.addSource('basemap', {
+          'type': 'raster',
+          'tiles': [
+            basemaps_url
+          ],
+          'attribution' : attrib,
+          'tileSize': 256
+      });
+
+      map.addLayer({
+          'id': 'basemap',
+          'type': 'raster',
+          'source': 'basemap',
+          'minzoom': 1,
+          'maxzoom': 9,
+      }, 'Grid');
+  }
+});
+
 
 const showSiteInfo = () => {
   $('.site-info').toggleClass('in');
@@ -970,7 +1016,7 @@ const updateHistory = (params) => {
 
 var map = new mapboxgl.Map({
   container: 'map',
-  style: 'mapbox://styles/mapbox/satellite-streets-v9',
+  style: { version: 8, sources: {}, layers: [] },
   center: [-70.50, 40],
   zoom: 3,
   attributionControl: true,
@@ -1060,7 +1106,7 @@ const addLayers = (source_id) => {
           },
           'fill-opacity': 1
       }
-  }, 'admin-2-boundaries-bg');
+  }, 'places');
 
   map.addLayer({
       'id': 'Highlighted',
@@ -1073,7 +1119,7 @@ const addLayers = (source_id) => {
           'fill-opacity': 0.3
       },
       'filter': ['in', 'PATH', '']
-  }, 'admin-2-boundaries-bg');
+  }, 'places');
 
   map.addLayer({
       'id': 'Selected',
@@ -1085,10 +1131,42 @@ const addLayers = (source_id) => {
           'line-width': 3
       },
       'filter': ['in', 'PATH', '']
-  }, 'admin-2-boundaries-bg');
+  }, 'places');
 }
 
 map.on('load', () => {
+
+  map.addSource('basemap', {
+    'type': 'raster',
+    'url': 'mapbox://mapbox.satellite'
+  });
+
+  map.addLayer({
+    'type': 'raster',
+    'paint': {},
+    'layout': {'visibility':'visible'},
+    'id': 'basemap',
+    'source': 'basemap'
+  });
+
+  map.addSource('places', {
+    'type': 'raster',
+    'tiles': [
+        'https://gibs.earthdata.nasa.gov/wmts/epsg3857/all/Reference_Labels/default/0/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png',
+    ],
+    'tileSize': 256
+  });
+
+  map.addLayer({
+    'type': 'raster',
+    'paint': {},
+    'layout': { 'visibility':'visible' },
+    'id': 'places',
+    'source': 'places',
+    'minZoom': 1,
+    'maxZoom': 8
+  });
+
   map.addSource('landsat', {
     'type': 'vector',
     'url': 'mapbox://vincentsarago.8ib6ynrs'
