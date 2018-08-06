@@ -499,27 +499,32 @@ const updateRasterTile = () => {
 
   const meta = scope.imgMetadata;
   let attrib;
+  let minzoom;
   let maxzoom;
   let rgb;
   let histo_cuts;
   let endpoint;
   let url;
 
+
   switch(sat) {
     case 'landsat':
       endpoint = landsat_services;
       attrib = '<a href="https://landsat.usgs.gov/landsat-8"> &copy; USGS/NASA Landsat</a>';
-      maxzoom = 14;
+      minzoom = 8;
+      maxzoom = 13;
       break;
     case 'sentinel':
       endpoint = `${sentinel_services}/s2`;
-      attrib = '<span> &copy; Copernicus / ESA 2017</span>';
-      maxzoom = 15;
+      attrib = '<span> &copy; Copernicus / ESA 2018</span>';
+      minzoom = 9;
+      maxzoom = 14;
       break;
     case 'cbers':
       endpoint = cbers_services;
       attrib = '<a href=""> &copy; CBERS</a>';
-      maxzoom = 15;
+      minzoom = 8;
+      maxzoom = 13;
       break;
     default:
       throw new Error(`Invalid ${source_id}`);
@@ -567,15 +572,15 @@ const updateRasterTile = () => {
     tiles: [ `${url}?${url_params}` ],
     attribution : attrib,
     bounds: scope.imgMetadata.bounds,
-    minzoom: 7,
-    maxzoom: maxzoom,
-    tileSize: gl_size
+    tileSize: gl_size,
+    minzoom: minzoom,
+    maxzoom: maxzoom
   });
 
   map.addLayer({
-    'id': 'raster-tiles',
-    'type': 'raster',
-    'source': 'raster-tiles'
+    id: 'raster-tiles',
+    type: 'raster',
+    source: 'raster-tiles'
   });
 
   map.getLayer('raster-tiles').top = false;
@@ -585,7 +590,7 @@ const updateRasterTile = () => {
 
   const extent = scope.imgMetadata.bounds;
   const llb = mapboxgl.LngLatBounds.convert([[extent[0],extent[1]], [extent[2],extent[3]]]);
-  if (map.getZoom() <= 6) map.fitBounds(llb, {padding: 50});
+  if (map.getZoom() <= minzoom) map.fitBounds(llb);
 
   let historyParams = {
     gl_size: gl_size,
@@ -717,7 +722,7 @@ document.getElementById("btn-text").onclick = () => {
     map.moveLayer('raster-tiles');
     map.getLayer('raster-tiles').top = false;
   } else {
-    map.moveLayer('raster-tiles', 'places');
+    map.moveLayer('raster-tiles', 'water');
     map.getLayer('raster-tiles').top = true;
   }
 };
@@ -742,44 +747,43 @@ document.getElementById("basemap-selection").addEventListener("change", (e) => {
   let basemap = e.target.value;
 
   switch (basemap) {
-  case 'mapbox.satellite':
-      map.addSource('basemap', {
-        'type': 'raster',
-        'url': 'mapbox://mapbox.satellite'
-      });
+  case 'sentinel2-cloudless':
 
       map.addLayer({
-        'type': 'raster',
-        'paint': {},
-        'layout': {'visibility':'visible'},
-        'id': 'basemap',
-        'source': 'basemap'
-      }, 'Grid');
+          'id': 'basemap',
+          'type': 'raster',
+          'source': {
+              'type': 'raster',
+              'tiles': [
+                  'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg'
+              ],
+              'attribution': 'Sentinel-2 cloudless - <a href="https://s2maps.eu">https://s2maps.eu</a> by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017)',
+              'tileSize': 256
+          }
+      }, 'background');
+
       return;
   default:
       const dateValue = moment().utc().subtract(1, 'day').format('YYYY-MM-DD')
       const basemaps_url = `https://map1.vis.earthdata.nasa.gov/wmts-webmerc/${basemap}/default/${dateValue}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
       const attrib = '<a href="https://earthdata.nasa.gov/about/science-system-description/eosdis-components/global-imagery-browse-services-gibs"> NASA EOSDIS GIBS</a>';
-
-      map.addSource('basemap', {
-          'type': 'raster',
-          'tiles': [
-            basemaps_url
-          ],
-          'attribution' : attrib,
-          'tileSize': 256
-      });
-
       map.addLayer({
           'id': 'basemap',
           'type': 'raster',
-          'source': 'basemap',
-          'minzoom': 1,
-          'maxzoom': 9,
-      }, 'Grid');
+          'source': {
+              'type': 'raster',
+              'tiles': [
+                  basemaps_url
+              ],
+              'attribution': attrib,
+              'tileSize': 256,
+              'minzoom': 1,
+              'maxzoom': 9
+          }
+      }, 'background');
+      return
   }
 });
-
 
 const showSiteInfo = () => {
   $('.site-info').toggleClass('in');
@@ -1016,7 +1020,7 @@ const updateHistory = (params) => {
 
 var map = new mapboxgl.Map({
   container: 'map',
-  style: { version: 8, sources: {}, layers: [] },
+  style: 'mapbox://styles/vincentsarago/cjjk5ecved47b2rniungishjt',
   center: [-70.50, 40],
   zoom: 3,
   attributionControl: true,
@@ -1106,7 +1110,7 @@ const addLayers = (source_id) => {
           },
           'fill-opacity': 1
       }
-  }, 'places');
+  }, 'water');
 
   map.addLayer({
       'id': 'Highlighted',
@@ -1119,7 +1123,7 @@ const addLayers = (source_id) => {
           'fill-opacity': 0.3
       },
       'filter': ['in', 'PATH', '']
-  }, 'places');
+  }, 'water');
 
   map.addLayer({
       'id': 'Selected',
@@ -1131,41 +1135,23 @@ const addLayers = (source_id) => {
           'line-width': 3
       },
       'filter': ['in', 'PATH', '']
-  }, 'places');
+  }, 'water');
 }
 
 map.on('load', () => {
 
-  map.addSource('basemap', {
-    'type': 'raster',
-    'url': 'mapbox://mapbox.satellite'
-  });
-
   map.addLayer({
-    'type': 'raster',
-    'paint': {},
-    'layout': {'visibility':'visible'},
-    'id': 'basemap',
-    'source': 'basemap'
-  });
-
-  map.addSource('places', {
-    'type': 'raster',
-    'tiles': [
-        'https://gibs.earthdata.nasa.gov/wmts/epsg3857/all/Reference_Labels/default/0/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png',
-    ],
-    'tileSize': 256
-  });
-
-  map.addLayer({
-    'type': 'raster',
-    'paint': {},
-    'layout': { 'visibility':'visible' },
-    'id': 'places',
-    'source': 'places',
-    'minZoom': 1,
-    'maxZoom': 8
-  });
+      'id': 'basemap',
+      'type': 'raster',
+      'source': {
+          'type': 'raster',
+          'tiles': [
+              'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg'
+          ],
+          'attribution': 'Sentinel-2 cloudless - <a href="https://s2maps.eu">https://s2maps.eu</a> by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017)',
+          'tileSize': 256
+      }
+  }, 'background');
 
   map.addSource('landsat', {
     'type': 'vector',
@@ -1206,7 +1192,6 @@ map.on('load', () => {
   if (params.pmax) $("#maxCount").val(params.pmax);
 
   if (params.sceneid) {
-    showSiteInfo();
     let sceneid = params.sceneid;
     let scene_info;
     let date = ''
