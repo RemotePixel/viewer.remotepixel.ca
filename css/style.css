@@ -276,7 +276,7 @@ ul.list-img li.list-element  img {
 }
 
 #menu.off {
-  left: -306px;
+  left: -240px;
   -o-transition: all .5s ease;
   -webkit-transition: all .5s ease;
   -moz-transition: all .5s ease;
@@ -387,6 +387,21 @@ ul {
   display: inherit;
 }
 
+#menu-content #config .range {
+  height: 15px;
+}
+
+#color-formula-3bands-input,
+#color-formula-1band-input {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px;
+}
+
+.txt-hr {
+  margin: 8px 0;
+}
+
 #toolbar {
   height: 35px;
 }
@@ -437,7 +452,7 @@ ul {
   font-size: 35px;
   line-height: 35px;
   vertical-align: middle;
-  right: -38px;
+  right: -35px;
   color: #28333b;
   background-color: #fff;
 }
@@ -463,7 +478,7 @@ ul {
   }
 
   #menu.off {
-    left: -246px;
+    left: -180px;
     -o-transition: all .5s ease;
     -webkit-transition: all .5s ease;
     -moz-transition: all .5s ease;

@@ -28,7 +28,7 @@
 	<link href="https://api.mapbox.com/mapbox-assembly/v0.20.0/assembly.min.css" rel="stylesheet">
 	<script src="https://api.mapbox.com/mapbox-assembly/v0.20.0/assembly.js"></script>
 
-  <link href="/css/style.min.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
 
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -51,7 +51,7 @@
 					</button>
 
 					<h2>RemotePixel Viewer</h2>
-					<p>A simple and fast Landsat-8, Sentinel-2 and CBERS-4 data viewer powered by AWS Lambda</p>
+					<p>A simple and fast Landsat-8 and CBERS-4 data viewer powered by AWS Lambda</p>
 
 					<img class="img-responsive center" src="img/viewer.jpg">
 
@@ -64,14 +64,10 @@
 
 					<h4>Map Tiles</h4>
 					<p>Tile served are TOA (Top Of Atmosphere) corrected and rescaled to 0->255 rgb values. Each tile is a direct response of ONE AWS Lambda function.</p>
-					<p>Landsat True Color RGB (4,3,2) is panshaperpenned and serverd at 15m resolution. Sentinel-2 is served at 10m resolution.</p>
+					<p>Landsat True Color RGB (4,3,2) is panshaperpenned and serverd at 15m resolution.</p>
 
 					<h4>Info</h4>
-					<p>Landsat/Sentinel/CBERS search results is powered by
-						<a href="https://github.com/remotepixel/aws-sat-api" target="_blank">RemotePixel Satellite API</a>.
-				  </p>
-
-					<p>Images previews are from Landsat, Sentinel and CBERS <a href="https://aws.amazon.com/fr/public-datasets/" target="_blank">AWS Public Dataset</a>.</p>
+					<p>Images previews are from Landsat and CBERS <a href="https://aws.amazon.com/fr/public-datasets/" target="_blank">AWS Public Dataset</a>.</p>
 
 					<p>This project is powered by Mapbox-GL API and the awesome vector tile technology develloped by <a href="https://mapbox.com" target="_blank">Mapbox</a>.</p>
 
@@ -91,32 +87,13 @@
 							<p>Info: <a href="http://landsat.usgs.gov/Landsat_Processing_Details.php" target="_blank">http://landsat.usgs.gov/</a></p>
 					</blockquote>
 
-					<p>Sentinel-2 data available on AWS are in Level <strong>1C</strong>:</p>
-					<blockquote>
-						Level-1C processing includes radiometric and geometric corrections including ortho-rectification and spatial registration on a global reference system with sub-pixel accuracy.
-						Level-1C processing is broken down into the following steps:
-						- Tiles association: selection of pre-defined tiles intersecting the footprint of the required image.
-						- Resampling grid computation: enabling linking of the native geometry image to the target geometry image (ortho-rectified).
-						- Resampling of each spectral band in the geometry of the ortho-image using the resampling grids and an interpolation filter. Calculation of the TOA reflectances also occurs in this step.
-						- Masks computation: cloud and land/water masks are generated.
-						- Imagery compression of the resultant Level-1C imagery via the JPEG2000 algorithm and a GML geographic imagery-encoded header.
-						<p>Info: <a href="https://sentinel.esa.int/web/sentinel/user-guides/sentinel-2-msi/processing-levels/level-1" target="_blank">https://sentinel.esa.int</a></p>
-
-						Reflectance, often between 0 and 1, is converted into integer values, in order to preserve the dynamic range of the data by applying a fixed coefficient (1000 by default).
-						<p>Info: <a href="https://sentinel.esa.int/web/sentinel/technical-guides/sentinel-2-msi/level-1c/algorithm" target="_blank">https://sentinel.esa.int</a></p>
-					</blockquote>
-
-
 					<p>CBERS-4:</p>
 					<blockquote>
 						DEMO, more info soon.
 					</blockquote>
 
 					<h4>Create your Own</h4>
-					<p><strong><a href="https://github.com/mapbox/landsat-tiler">https://github.com/mapbox/landsat-tiler</a></strong></p>
-					<p><strong><a href="https://github.com/mapbox/sentinel-tiler">https://github.com/mapbox/sentinel-tiler</a></strong></p>
-					<p><strong><a href="https://github.com/mapbox/sentinel-tiler">https://github.com/mapbox/cbers-tiler</a></strong></p>
-
+					<p><strong><a href="https://github.com/remotepixel/remotepixel-tiler">https://github.com/remotepixel/remotepixel-tiler</a></strong></p>
 					<p><strong><a href="https://github.com/remotepixel/viewer.remotepixel.ca">https://github.com/remotepixel/viewer.remotepixel.ca</a></strong></p>
 
 					<h4>Contact</h4>
@@ -127,6 +104,7 @@
 					<div class="thanks-images grid">
 						<a href="https://www.mapbox.com" target="_blank" class="col col--3 col--offl1 mr6 ml6"><img class="img-responsive" src="img/mapbox.png"></a>
 						<a href="https://aws.amazon.com/" target="_blank" class="col col--3 mr6 ml6"><img class="img-responsive" src="img/awservice.png"></a>
+						<a href="https://eox.at/" target="_blank" class="col col--3 mr6 ml6"><img class="img-responsive" src="/img/eox.png"></a>
 					</div>
 
 					<div class="site-version">Version: 2.0</div>
@@ -135,7 +113,7 @@
 
 			<div class="main-pane">
 
-				<div id='menu' class='flex-child w240 w300-ml absolute ml6 mt6 bg-white z2'>
+				<div id='menu' class='flex-child w180 w240-ml absolute bg-white z2'>
 					<ul id='toolbar' class='grid'>
 						<li id='rgb' class="col col--4 active" title="rgb" onclick="switchPane(this)">
 							<svg class='icon icon--l inline-block'><use xlink:href='#icon-menu'/></svg>
@@ -146,14 +124,11 @@
 						<li id='process' class="col col--4" title="process" onclick="switchPane(this)">
 							<svg class='icon icon--l inline-block'><use xlink:href='#icon-raster'/></svg>
 						</li>
-						<!-- <li id='config' class="col col--3" title="config" onclick="switchPane(this)">
-							<svg class='icon icon--l inline-block'><use xlink:href='#icon-sprocket'/></svg>
-						</li> -->
 					</ul>
 
 					<div id='menu-content' class='relative'>
 
-						<section id='rgb' class="px12 py12 active">
+						<section id='rgb' class="px12 pt12 pb6 active">
 							<div class='txt-h5 mb12 color-black'>Band Combinations</div>
 							<div class='select-container wmax-full'>
 								<select id='rgb-selection' class='select select--s select--stroke  wmax-full color-black'>
@@ -176,7 +151,7 @@
 
 							<div id='rgb-buttons' class='align-center px6 py6'>
 								<div class='select-container'>
-									<select id='r' disabled class='select select--stroke select--stroke--2 color-red mx6 my6'>
+									<select id='r' disabled class='select select--stroke select--stroke--2 color-red mx3 my3'>
 										<option value="1">01</option>
 										<option value="2">02</option>
 										<option value="3">03</option>
@@ -191,7 +166,7 @@
 								</div>
 
 								<div class='select-container'>
-									<select id='g' disabled class='select select--stroke select--stroke--2 color-green mx6 my6'>
+									<select id='g' disabled class='select select--stroke select--stroke--2 color-green mx3 my3'>
 										<option value="1">01</option>
 										<option value="2">02</option>
 										<option value="3" selected="selected">03</option>
@@ -206,7 +181,7 @@
 								</div>
 
 								<div class='select-container'>
-									<select id='b' disabled class='select select--stroke select--stroke--2 color-blue mx6 my6'>
+									<select id='b' disabled class='select select--stroke select--stroke--2 color-blue mx3 my3'>
 										<option value="1">01</option>
 										<option value="2" selected="selected">02</option>
 										<option value="3">03</option>
@@ -220,25 +195,47 @@
 									</select>
 								</div>
 							</div>
+							<div>
+								<div class='txt-s mb6 color-black'>Color Formula (<a href="https://github.com/mapbox/rio-color">more info</a>)</div>
+								<input 
+									id='color-formula-3bands-input' 
+									type='text' 
+									class='input input--border-black' 
+									value='Gamma RGB 3.5 Saturation 1.7 Sigmoidal RGB 15 0.35'
+								/>
+								<button id='set-cf' class='btn btn--s btn--stroke mt6 color-black'>Set</button>
+							</div>
+
 						</section>
 
-						<section id='band' class="px12 py12">
+						<section id='band' class="px12 pt12 pb6">
 							<div class='txt-h5 mb12 color-black'>Band Selection</div>
 							<div id='band-buttons' class='px6 py6'>
-								<button onclick='updateBands(this)' value='1' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m active'>01</button>
-								<button onclick='updateBands(this)' value='2' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>02</button>
-								<button onclick='updateBands(this)' value='3' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>03</button>
-								<button onclick='updateBands(this)' value='4' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>04</button>
-								<button onclick='updateBands(this)' value='5' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>05</button>
-								<button onclick='updateBands(this)' value='6' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>06</button>
-								<button onclick='updateBands(this)' value='7' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>07</button>
-								<button onclick='updateBands(this)' value='9' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>09</button>
-								<button onclick='updateBands(this)' value='10' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>10</button>
-								<button onclick='updateBands(this)' value='11' class='btn btn--stroke btn--stroke--2 mx6 my6 txt-m'>11</button>
+								<button onclick='updateBands(this)' value='1' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m active'>01</button>
+								<button onclick='updateBands(this)' value='2' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>02</button>
+								<button onclick='updateBands(this)' value='3' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>03</button>
+								<button onclick='updateBands(this)' value='4' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>04</button>
+								<button onclick='updateBands(this)' value='5' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>05</button>
+								<button onclick='updateBands(this)' value='6' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>06</button>
+								<button onclick='updateBands(this)' value='7' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>07</button>
+                <button onclick='updateBands(this)' value='8' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>08</button>
+								<button onclick='updateBands(this)' value='9' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>09</button>
+								<button onclick='updateBands(this)' value='10' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>10</button>
+								<button onclick='updateBands(this)' value='11' class='btn btn--stroke btn--stroke--2 mx3 my3 txt-m'>11</button>
+							</div>
+							<div>
+								<div class='txt-s mb6 color-black'>Color Formula (<a href="https://github.com/mapbox/rio-color">more info</a>)</div>
+								<input 
+									id='color-formula-1band-input' 
+									type='text' 
+									class='input input--border-black' 
+									value='Gamma R 3.5'
+								/>
+								<button id='set-cf' class='btn btn--s btn--stroke mt6 color-black'>Set</button>
 							</div>
 						</section>
 
-						<section id='process' class="px12 py12">
+						<section id='process' class="px12 pt12 pb6">
 							<div class='txt-h5 mb12 color-black'>Band ratios</div>
 							<div class='select-container w-full'>
 								<select id='ratio-selection' class='select select--s select--stroke  w-full color-black'>
@@ -252,70 +249,22 @@
 							</div>
 						</section>
 
-						<div id='params' class="px12 py12 relative">
-							<div class='txt-h5 mb12 color-black'>Histogram Cut</div>
-							<div class='px6 py6'>
-								<input id="minCount" class='input input--s wmax60 inline-block align-center color-black' value='2' />
-								<input id="maxCount" class='input input--s wmax60 inline-block align-center color-black ml12' value='98' />
-								<button class='btn bts--xs btn--stroke bg-darken25-on-hover inline-block txt-s color-black ml12' onclick="updateMetadata()">Apply</button>
-							</div>
-						</div>
+						<hr class='txt-hr'>
 
-						<div id='config' class="px12 py12">
-							<div class='txt-s mt6 color-black'>Tile format</div>
-							<div id='format-toggle' class='toggle-group txt-xs mr18 bg-gray-faint'>
-								<label class='toggle-container'>
-									<input format="png" name='toggle-format' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>png</div>
-								</label>
-								<label class='toggle-container'>
-									<input format="jpeg" checked name='toggle-format' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>jpeg</div>
-								</label>
-								<label class='toggle-container'>
-									<input format="webp" name='toggle-format' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>webp</div>
-								</label>
+						<div id='config' class="px12">              
+							<div class='txt-s mt6 color-black'>Contrast</div>
+							<div id='contrast-range' class='range mr6'>
+								<input id='contrast-value' type='range' min='-1' max='1' step='0.1' value='0'/>
+								<span id='contrast-txt' class="txt-m ml3 w18 color-black">0</span>
 							</div>
 
-							<div class='txt-s mt6 color-black none'>Raster Tile size</div>
-							<div id='rsize-toggle' class='toggle-group txt-xs mr18 bg-gray-faint none'>
-								<label class='toggle-container'>
-									<input rSize="128" name='toggle-rsize' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>128</div>
-								</label>
-								<label class='toggle-container'>
-									<input rSize="256" checked name='toggle-rsize' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>256</div>
-								</label>
-								<label class='toggle-container'>
-									<input rSize="512" name='toggle-rsize' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>512</div>
-								</label>
+              <div class='txt-s mt6 color-black'>Saturation</div>
+							<div id='saturation-range' class='range mr6'>
+								<input id='saturation-value' type='range' min='-1' max='1' step='0.1' value='0'/>
+								<span id='saturation-txt' class='txt-m ml3 w18 color-black'>0</span>
 							</div>
 
-							<div class='txt-s mt6 color-black none'>GL Tile size</div>
-							<div id='glsize-toggle' class='toggle-group txt-xs mr18 bg-gray-faint none'>
-								<label class='toggle-container'>
-									<input glSize="128" name='toggle-glsize' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>128</div>
-								</label>
-								<label class='toggle-container'>
-									<input glSize="256" checked name='toggle-glsize' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>256</div>
-								</label>
-								<label class='toggle-container'>
-									<input glSize="512" name='toggle-glsize' type='radio' />
-									<div class='toggle color-gray-dark-on-hover'>512</div>
-								</label>
-							</div>
-
-							<div class='txt-s mt6 color-black'>Opacity</div>
-							<div id='opacity-range' class='range range--blue mr36'>
-								<input id='opacity-value' type='range' min="0" max="100" step="1" value="100"/>
-							</div>
-
-
+              <hr class='txt-hr'>
 							<div class='txt-s mt6 color-black'>Basemap</div>
 
 							<div class='select-container w-full'>
@@ -349,10 +298,6 @@
 					    <input sat="landsat" checked name='toggle-sat' type='radio' />
 					    <div class='toggle color-gray-dark-on-hover'>Landsat</div>
 					  </label>
-					  <label class='toggle-container'>
-					    <input sat="sentinel" name='toggle-sat' type='radio' />
-					    <div class='toggle color-gray-dark-on-hover'>Sentinel</div>
-					  </label>
 						<label class='toggle-container'>
 					    <input sat="cbers" name='toggle-sat' type='radio' />
 					    <div class='toggle color-gray-dark-on-hover'>CBERS</div>
@@ -368,7 +313,6 @@
 					<button id='btn-text' title='toggle place' class='shadow-darken10-bold-on-hover bg-gray-dark-on-hover round none'>
 						<svg class='icon icon--l'><use xlink:href='#icon-font'/></svg>
 					</button>
-
 
 					<button id="dl" class='shadow-darken10-bold-on-hover bg-gray-dark-on-hover round none'>
 						<svg class='icon icon--l'><use xlink:href='#icon-picture'/></svg>
