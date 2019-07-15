@@ -1,6 +1,6 @@
 /* global  $, mapboxgl, moment, turf, saveAs */
 
-mapboxgl.accessToken = 'pk.eyJ1IjoidmluY2VudHNhcmFnbyIsImEiOiJjamxwa3c1Zm0wamt3M3BwYnM2bnh2cGYyIn0.iEW0fj8Pxq_GMnmdUNa6xw'
+mapboxgl.accessToken = ''
 
 const landsatServices = ''
 const cbersServices = ''
